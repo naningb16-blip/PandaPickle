@@ -1,0 +1,182 @@
+========================================
+PANDAPICKLE - COMPLETE FEATURE LIST
+========================================
+
+USER FEATURES:
+--------------
+- User registration and login
+- Password reset functionality
+- Personal dashboard
+- Court reservation booking
+- Open play session registration
+- Reservation history tracking
+- Payment status tracking
+- Pay now functionality with payment details
+- Receipt upload (image: JPG, PNG, GIF up to 5MB)
+- View uploaded receipt
+- Reservation search
+- Friend group registration (4 players at once)
+- Random match preference
+- Play with friends preference
+- Partner name entry
+- Payment method selection (cash/cashless)
+- Reservation confirmation codes
+- Real-time booking availability
+
+ADMIN FEATURES:
+---------------
+- Admin dashboard with statistics
+- Court management
+- Reservation management
+- Open play session management
+- Walk-in customer creation
+- Walk-in reservations
+- Walk-in open play registrations
+- Reservation approval/rejection
+- Mark reservations as complete
+- Payment verification system
+- View uploaded payment receipts
+- Approve/reject payments
+- Payment settings configuration (GCash, Bank details)
+- Session timer with start/stop/reset
+- Persistent timer across page reloads
+- Match creation for open play
+- Random team matching algorithm
+- Manual team pairing
+- Game number assignment
+- Export reports to CSV
+- Search reservations
+- Filter by date range
+- Admin registration for additional admins
+- User management
+
+RESERVATION SYSTEM:
+-------------------
+- Multiple court support
+- Hourly rate pricing (PHP 250/hour)
+- Date and time selection
+- Start time and end time selection
+- Hours calculation
+- Total amount calculation
+- Reservation code generation
+- Status tracking (pending, approved, rejected, completed)
+- Online reservations
+- Walk-in reservations
+
+OPEN PLAY SYSTEM:
+-----------------
+- Session creation with date/time
+- Max players limit
+- Fee per player
+- Registration tracking
+- Friend group registration
+- Random match pairing
+- Match preference system
+- Team management
+- Match history
+- Game number tracking
+- Walk-in support
+
+PAYMENT SYSTEM:
+---------------
+- Payment tracking per reservation
+- Payment tracking per open play registration
+- Payment status (unpaid, pending_verification, paid, rejected)
+- Admin payment details (GCash number, Bank account)
+- Payment instructions configuration
+- Contact number for inquiries
+- Receipt upload with cloud storage (Cloudinary)
+- Receipt preview for admin
+- Payment verification workflow
+- Payment method tracking
+
+TECHNICAL FEATURES:
+-------------------
+- PostgreSQL database (cloud-ready)
+- PHP backend
+- Responsive design (mobile-friendly)
+- Secure password hashing (bcrypt)
+- Session management
+- Email validation
+- Unique constraint enforcement
+- Foreign key relationships
+- Transaction support
+- Database migrations
+- Security indexes
+- SQL injection prevention
+- XSS protection
+- CSRF protection
+- Cloud image storage (Cloudinary)
+- Persistent file uploads
+- Docker support
+- Render deployment ready
+- Environment variable configuration
+- Error logging
+- Flash messaging system
+
+DEPLOYMENT:
+-----------
+- Local development (XAMPP)
+- Cloud hosting (Render)
+- Docker containerization
+- PostgreSQL cloud database
+- Cloudinary CDN integration
+- HTTPS support
+- Auto-deployment from Git
+- Environment-based configuration
+
+REPORTING:
+----------
+- View all reports
+- Date range filtering
+- Customer details
+- Booking type (online/walk-in)
+- Payment status
+- Export to CSV
+- Reservation statistics
+- Total bookings count
+- Upcoming reservations
+- Walk-in statistics
+
+SECURITY:
+---------
+- User authentication
+- Admin authorization
+- Password encryption
+- Secure session handling
+- Input validation
+- SQL injection prevention
+- XSS prevention
+- File upload validation
+- Environment variable secrets
+- Database constraints
+- Foreign key cascades
+
+STATISTICS:
+-----------
+- Total bookings
+- Upcoming reservations
+- Walk-in count
+- Recent reservations list
+- Payment statistics
+- Open play registrations
+- Hourly rate display
+
+ADDITIONAL:
+-----------
+- About page
+- Contact page
+- Email uniqueness check
+- Phone number tracking
+- Customer name tracking
+- Partner name tracking
+- Reservation date tracking
+- Time slot management
+- Status badge system
+- Alert/notification system
+- Form validation
+- Error handling
+
+========================================
+TOTAL FEATURES: 100+
+========================================

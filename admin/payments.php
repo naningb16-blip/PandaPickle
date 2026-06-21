@@ -74,9 +74,11 @@ require_once __DIR__ . '/../includes/header.php';
                             <td><?= e(formatMoney((float) $p['amount'])) ?></td>
                             <td>
                                 <?php if ($p['proof_image']): ?>
-                                    <a href="<?= e($p['proof_image']) ?>" target="_blank">
-                                        <img src="<?= e($p['proof_image']) ?>" class="proof-thumb" alt="Receipt">
-                                    </a>
+                                    <img src="<?= e($p['proof_image']) ?>" 
+                                         class="proof-thumb" 
+                                         alt="Receipt"
+                                         onclick="openLightbox('<?= e($p['proof_image']) ?>')"
+                                         style="cursor: pointer;">
                                 <?php else: ?>—<?php endif; ?>
                             </td>
                             <td><span class="badge <?= statusBadgeClass($p['payment_status']) ?>"><?= e(str_replace('_', ' ', $p['payment_status'])) ?></span></td>
@@ -98,5 +100,31 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
+
+<!-- Lightbox Modal for Receipt Images -->
+<div id="receiptLightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center;" onclick="closeLightbox()">
+    <span style="position:absolute; top:20px; right:40px; color:#fff; font-size:40px; font-weight:bold; cursor:pointer;" onclick="closeLightbox()">&times;</span>
+    <img id="lightboxImage" src="" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.5);">
+</div>
+
+<script>
+function openLightbox(imageUrl) {
+    document.getElementById('lightboxImage').src = imageUrl;
+    document.getElementById('receiptLightbox').style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+}
+
+function closeLightbox() {
+    document.getElementById('receiptLightbox').style.display = 'none';
+    document.body.style.overflow = 'auto'; // Restore scrolling
+}
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeLightbox();
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
