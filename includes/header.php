@@ -26,8 +26,8 @@ $flash = getFlash();
                 <a href="<?= e($basePath ?? '') ?>about.php" class="<?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
                 <a href="<?= e($basePath ?? '') ?>contact.php" class="<?= $currentPage === 'contact' ? 'active' : '' ?>">Contact</a>
                 <?php if ($user): ?>
-                    <a href="<?= e($basePath ?? '') ?>dashboard.php" class="<?= $currentPage === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
                     <?php if (!isAdmin()): ?>
+                        <a href="<?= e($basePath ?? '') ?>dashboard.php" class="<?= $currentPage === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
                         <a href="<?= e($basePath ?? '') ?>reservations.php" class="<?= $currentPage === 'reservations' ? 'active' : '' ?>">Reservations</a>
                         <a href="<?= e($basePath ?? '') ?>open-play.php" class="<?= $currentPage === 'open-play' ? 'active' : '' ?>">Open Play</a>
                     <?php endif; ?>
