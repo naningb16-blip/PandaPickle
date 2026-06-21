@@ -7,11 +7,109 @@ $db = getDB();
 $reservationId = $_GET['reservation_id'] ?? 0;
 $registrationId = $_GET['registration_id'] ?? 0;
 
+// Handle receipt upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
+    $uploadError = null;
+    $file = $_FILES['receipt'];
+    
+    // Validate file upload
+    if ($file['error'] === UPLOAD_ERR_OK) {
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+        
+        if (!in_array($file['type'], $allowedTypes)) {
+            $uploadError = 'Only JPG, PNG, and GIF images are allowed.';
+        } elseif ($file['size'] > $maxSize) {
+            $uploadError = 'File size must not exceed 5MB.';
+        } else {
+            // Create uploads directory if it doesn't exist
+            $uploadsDir = __DIR__ . '/uploads/receipts';
+            if (!is_dir($uploadsDir)) {
+                mkdir($uploadsDir, 0755, true);
+            }
+            
+            // Generate unique filename
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = 'receipt_' . time() . '_' . uniqid() . '.' . $extension;
+            $targetPath = $uploadsDir . '/' . $filename;
+            $dbPath = 'uploads/receipts/' . $filename;
+            
+            if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                // Check if payment record exists
+                $paymentId = null;
+                if ($reservationId) {
+                    $stmt = $db->prepare('SELECT id FROM payments WHERE reservation_id = ?');
+                    $stmt->execute([$reservationId]);
+                    $payment = $stmt->fetch();
+                    $paymentId = $payment['id'] ?? null;
+                    
+                    // If no payment record exists, create one
+                    if (!$paymentId) {
+                        $stmt = $db->prepare('SELECT total_amount FROM exclusive_reservations WHERE id = ?');
+                        $stmt->execute([$reservationId]);
+                        $res = $stmt->fetch();
+                        
+                        $stmt = $db->prepare(
+                            'INSERT INTO payments (reservation_id, payment_type, amount, payment_status, proof_image) 
+                             VALUES (?, \'reservation\', ?, \'pending_verification\', ?)'
+                        );
+                        $stmt->execute([$reservationId, $res['total_amount'], $dbPath]);
+                        $paymentId = $db->lastInsertId();
+                    } else {
+                        // Update existing payment record
+                        $stmt = $db->prepare(
+                            'UPDATE payments SET proof_image = ?, payment_status = \'pending_verification\' WHERE id = ?'
+                        );
+                        $stmt->execute([$dbPath, $paymentId]);
+                    }
+                } elseif ($registrationId) {
+                    $stmt = $db->prepare('SELECT id FROM payments WHERE registration_id = ?');
+                    $stmt->execute([$registrationId]);
+                    $payment = $stmt->fetch();
+                    $paymentId = $payment['id'] ?? null;
+                    
+                    // If no payment record exists, create one
+                    if (!$paymentId) {
+                        $stmt = $db->prepare('SELECT fee FROM open_play_registrations WHERE id = ?');
+                        $stmt->execute([$registrationId]);
+                        $reg = $stmt->fetch();
+                        
+                        $stmt = $db->prepare(
+                            'INSERT INTO payments (registration_id, payment_type, amount, payment_status, proof_image) 
+                             VALUES (?, \'open_play\', ?, \'pending_verification\', ?)'
+                        );
+                        $stmt->execute([$registrationId, $reg['fee'], $dbPath]);
+                        $paymentId = $db->lastInsertId();
+                    } else {
+                        // Update existing payment record
+                        $stmt = $db->prepare(
+                            'UPDATE payments SET proof_image = ?, payment_status = \'pending_verification\' WHERE id = ?'
+                        );
+                        $stmt->execute([$dbPath, $paymentId]);
+                    }
+                }
+                
+                flash('success', 'Receipt uploaded successfully! Your payment is now pending admin verification.');
+                header('Location: dashboard.php');
+                exit;
+            } else {
+                $uploadError = 'Failed to upload file. Please try again.';
+            }
+        }
+    } else {
+        $uploadError = 'Error uploading file. Please try again.';
+    }
+    
+    if ($uploadError) {
+        flash('error', $uploadError);
+    }
+}
+
 // Get reservation or registration details
 $item = null;
 $type = '';
 if ($reservationId) {
-    $stmt = $db->prepare('SELECT r.*, c.court_name, p.payment_status, p.amount 
+    $stmt = $db->prepare('SELECT r.*, c.court_name, p.payment_status, p.amount, p.proof_image, r.total_amount 
                           FROM exclusive_reservations r 
                           JOIN courts c ON c.id = r.court_id
                           LEFT JOIN payments p ON p.reservation_id = r.id
@@ -20,7 +118,7 @@ if ($reservationId) {
     $item = $stmt->fetch();
     $type = 'reservation';
 } elseif ($registrationId) {
-    $stmt = $db->prepare('SELECT reg.*, s.title, s.session_date, p.payment_status, p.amount
+    $stmt = $db->prepare('SELECT reg.*, s.title, s.session_date, p.payment_status, p.amount, p.proof_image, reg.fee
                           FROM open_play_registrations reg
                           JOIN open_play_sessions s ON s.id = reg.session_id
                           LEFT JOIN payments p ON p.registration_id = reg.id
@@ -101,7 +199,17 @@ require_once __DIR__ . '/includes/header.php';
                 
                 <div class="info-row" style="font-size: 1.2rem;">
                     <strong>Amount to Pay:</strong>
-                    <span style="color: #059669; font-weight: 700;"><?= e(formatMoney((float)$item['amount'])) ?></span>
+                    <span style="color: #059669; font-weight: 700;">
+                        <?php
+                        // Show payment amount or calculate from reservation/registration
+                        if ($type === 'reservation') {
+                            $amount = $item['amount'] ?? $item['total_amount'];
+                        } else {
+                            $amount = $item['amount'] ?? $item['fee'];
+                        }
+                        echo e(formatMoney((float)$amount));
+                        ?>
+                    </span>
                 </div>
                 
                 <div class="info-row">
@@ -163,6 +271,50 @@ require_once __DIR__ . '/includes/header.php';
                     Contact us: <strong style="color: #047857;"><?= e($paymentData['contact_number'] ?? 'Not available') ?></strong>
                 </div>
 
+                <!-- Receipt Upload Section -->
+                <div class="receipt-upload-section">
+                    <h4 style="color: #059669; margin-top: 0; margin-bottom: 1rem;">
+                        📎 Upload Payment Receipt
+                    </h4>
+                    
+                    <?php
+                    // Check if receipt already uploaded
+                    $hasReceipt = !empty($item['proof_image']);
+                    if ($hasReceipt):
+                    ?>
+                        <div class="alert alert-success" style="background: #d1fae5; border-color: #059669; color: #065f46;">
+                            <strong>✅ Receipt Already Uploaded</strong><br>
+                            Your payment is currently under admin verification. You will be notified once verified.
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem;">
+                            <img src="<?= e($item['proof_image']) ?>" alt="Uploaded Receipt" style="max-width: 100%; max-height: 400px; border: 2px solid #059669; border-radius: 8px;">
+                        </div>
+                    <?php else: ?>
+                        <form method="POST" enctype="multipart/form-data" style="margin-top: 1rem;">
+                            <div class="form-group">
+                                <label for="receipt" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                    Select Receipt Image (JPG, PNG, GIF - Max 5MB)
+                                </label>
+                                <input 
+                                    type="file" 
+                                    id="receipt" 
+                                    name="receipt" 
+                                    accept="image/jpeg,image/jpg,image/png,image/gif" 
+                                    required
+                                    style="display: block; width: 100%; padding: 0.5rem; border: 2px solid #059669; border-radius: 6px;"
+                                >
+                                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                                    📸 Take a clear photo of your payment receipt or screenshot
+                                </small>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; background: #059669; padding: 0.75rem;">
+                                ⬆️ Upload Receipt
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+
                 <div style="margin-top: 2rem; text-align: center;">
                     <a href="dashboard.php" class="btn btn-secondary">← Back to Dashboard</a>
                 </div>
@@ -204,6 +356,22 @@ require_once __DIR__ . '/includes/header.php';
     background: #e7f3ff;
     border: 1px solid #b3d9ff;
     color: #004085;
+    padding: 1rem;
+    border-radius: 6px;
+}
+
+.receipt-upload-section {
+    background: #f8f9fa;
+    border: 2px dashed #059669;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.alert-success {
+    background: #d1fae5;
+    border: 1px solid #059669;
+    color: #065f46;
     padding: 1rem;
     border-radius: 6px;
 }

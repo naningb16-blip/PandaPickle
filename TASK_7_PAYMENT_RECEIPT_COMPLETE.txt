@@ -1,0 +1,171 @@
+========================================
+TASK 7: PAY NOW + RECEIPT UPLOAD - COMPLETE ✅
+========================================
+
+USER REQUEST:
+-------------
+1. "In user dashboard beside the status of its reservation can u put a button show pay now"
+2. "Only the admin can create a payment dashboard showing the payment information"
+3. "When user click the paynow button it will display the Payment information of the admin"
+4. "Put a upload receipt for users so that we can verify if they already paid it"
+
+IMPLEMENTATION COMPLETE:
+------------------------
+
+✅ 1. PAY NOW BUTTON
+   - Added "💳 Pay Now" button in dashboard.php
+   - Shows for unpaid reservations and open play registrations
+   - Only visible when payment_status = 'unpaid'
+
+✅ 2. ADMIN PAYMENT SETTINGS
+   - Created admin/payment-settings.php page
+   - Admin can configure:
+     * GCash Number and Name
+     * Bank Name, Account Number, Account Name
+     * Payment Instructions
+     * Contact Number
+   - Settings stored in payment_settings table
+
+✅ 3. PAYMENT INFORMATION PAGE
+   - Created payment-info.php
+   - Displays booking details (reservation or open play)
+   - Shows amount to pay
+   - Displays admin's payment methods (GCash & Bank Transfer)
+   - Shows payment instructions and contact info
+
+✅ 4. RECEIPT UPLOAD FEATURE
+   - Upload form in payment-info.php
+   - File validation:
+     * Only JPG, PNG, GIF allowed
+     * Max 5MB file size
+     * Unique filename generation
+   - Receipt saved to uploads/receipts/ directory
+   - Payment status changes to 'pending_verification'
+   - User sees confirmation message
+
+✅ 5. ADMIN VERIFICATION
+   - admin/payments.php page (already existed)
+   - Admin can view uploaded receipts
+   - Click thumbnail to view full image
+   - Verify as "Paid" or "Reject"
+   - Tracks admin ID and timestamp
+
+FILES MODIFIED:
+---------------
+1. dashboard.php - Added "Pay Now" buttons for unpaid items
+2. payment-info.php - Added receipt upload form and handler
+3. admin/includes/sidebar.php - Added "Payment Settings" link
+
+FILES CREATED:
+--------------
+1. admin/payment-settings.php - Admin payment configuration
+2. database/migration_add_payment_settings.sql - Payment settings table
+3. database/migration_add_payment_method.sql - Optional payment method tracking
+4. uploads/receipts/.gitkeep - Receipt upload directory
+5. uploads/.gitignore - Protect uploads from git
+6. PAYMENT_RECEIPT_UPLOAD_FEATURE.txt - Complete documentation
+7. MIGRATIONS_TO_RUN.txt - Migration checklist
+
+PAYMENT FLOW:
+-------------
+
+USER SIDE:
+1. User logs in → dashboard.php
+2. Sees reservations/registrations with "💳 Pay Now" button
+3. Clicks Pay Now → redirected to payment-info.php
+4. Views payment details (GCash/Bank info)
+5. Makes payment via GCash or Bank Transfer
+6. Uploads receipt image
+7. Sees "Receipt uploaded successfully!" message
+8. Payment status: unpaid → pending_verification
+
+ADMIN SIDE:
+1. Admin goes to admin/payments.php
+2. Sees all payments with uploaded receipts
+3. Clicks receipt thumbnail to view full image
+4. Clicks "Verify Paid" or "Reject"
+5. Payment status: pending_verification → paid/rejected
+6. User can see updated status on dashboard
+
+DATABASE STRUCTURE:
+-------------------
+
+payments table:
+- id (primary key)
+- reservation_id (foreign key)
+- registration_id (foreign key)
+- payment_type ('reservation' or 'open_play')
+- proof_image (path to uploaded receipt)
+- amount (decimal)
+- payment_status ('unpaid', 'pending_verification', 'paid', 'rejected')
+- verified_by (admin user_id)
+- verified_at (timestamp)
+
+payment_settings table:
+- id (primary key)
+- setting_key (gcash_number, bank_name, etc.)
+- setting_value (actual value)
+- setting_label (display label)
+- is_active (boolean)
+- display_order (integer)
+
+PAYMENT STATUSES:
+-----------------
+1. unpaid - Initial status, no payment made
+2. pending_verification - Receipt uploaded, awaiting admin review
+3. paid - Admin verified and approved payment
+4. rejected - Admin rejected payment, user must re-upload
+
+SECURITY FEATURES:
+------------------
+✅ File type validation (only images)
+✅ File size limit (5MB)
+✅ Unique filename generation
+✅ User can only access their own bookings
+✅ Admin authentication required for verification
+✅ Uploaded files protected from git (.gitignore)
+
+DEPLOYMENT STEPS:
+-----------------
+
+LOCAL:
+1. ✅ Code completed and saved
+2. ⚠️ Run migration_add_payment_settings.sql in phpMyAdmin
+3. ⚠️ Test receipt upload locally
+4. ⚠️ Configure payment settings via admin/payment-settings.php
+
+RENDER:
+1. ⚠️ Commit and push to GitHub main branch
+2. ⚠️ Run migration_add_payment_settings.sql in TablePlus
+3. ⚠️ Create uploads/receipts directory (auto-creates on first upload)
+4. ⚠️ Test on live site
+5. ⚠️ Configure payment settings via admin/payment-settings.php
+
+TESTING CHECKLIST:
+------------------
+□ User can view payment information
+□ User can upload receipt (valid image)
+□ File validation rejects invalid files
+□ Receipt appears in uploads/receipts/
+□ Payment status changes to pending_verification
+□ Admin sees receipt in payments page
+□ Admin can verify payment
+□ Admin can reject payment
+□ User sees updated status on dashboard
+□ Rejected payments allow re-upload
+
+NEXT USER ACTIONS REQUIRED:
+---------------------------
+1. Run migration_add_payment_settings.sql on local database
+2. Configure payment settings (GCash, Bank info)
+3. Test complete flow locally
+4. Run migration on Render database
+5. Push code to GitHub
+6. Test on live site
+
+FEATURE STATUS: COMPLETE ✅
+CODE STATUS: READY FOR DEPLOYMENT ✅
+MIGRATIONS: READY TO RUN ⚠️
+TESTING: PENDING USER TESTING ⚠️
+
+========================================

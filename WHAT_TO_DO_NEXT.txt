@@ -1,0 +1,145 @@
+========================================
+⚡ WHAT TO DO NEXT - ACTION ITEMS
+========================================
+
+YOU HAVE 2 PENDING MIGRATIONS TO RUN:
+--------------------------------------
+
+1️⃣ PAYMENT RECEIPT UPLOAD (NEW FEATURE - JUST COMPLETED)
+   File: database/migration_add_payment_settings.sql
+   What it does: Creates payment_settings table for GCash/Bank info
+   Status: ❌ NOT YET RUN
+   
+2️⃣ PERSISTENT TIMER FIX (FROM PREVIOUS REQUEST)
+   File: database/migration_add_timer_tracking.sql
+   What it does: Adds timer_started_at and timer_status columns
+   Status: ❌ NOT YET RUN
+
+========================================
+QUICK ACTION PLAN:
+========================================
+
+🔧 LOCAL TESTING (Do this first):
+----------------------------------
+1. Open phpMyAdmin (http://localhost/phpmyadmin)
+2. Select 'pandapickle' database
+3. Run BOTH migrations:
+   
+   A. Click SQL tab
+   B. Copy content from: database/migration_add_payment_settings.sql
+   C. Paste and click "Go"
+   D. Should see "7 rows inserted"
+   
+   E. Click SQL tab again
+   F. Copy content from: database/migration_add_timer_tracking.sql
+   G. Paste and click "Go"
+   H. Should see success message
+
+4. Configure payment settings:
+   - Login as admin
+   - Go to admin/payment-settings.php
+   - Fill in your GCash and Bank details
+   - Save
+
+5. Test features:
+   - Test receipt upload (login as user → book court → pay now → upload receipt)
+   - Test timer persistence (start timer → refresh page → timer continues)
+   - Verify as admin (admin/payments.php → verify uploaded receipt)
+
+🚀 RENDER DEPLOYMENT (After local testing works):
+--------------------------------------------------
+1. Connect to Render PostgreSQL via TablePlus:
+   Host: dpg-d8ro161o3t8c73ebfv20-a.oregon-postgres.render.com
+   Port: 5432
+   Database: pandapickle
+   User: pandapickle_user
+   
+2. Run BOTH migrations in TablePlus:
+   A. Click SQL button (or Cmd/Ctrl + E)
+   B. Copy content from: database/migration_add_payment_settings.sql
+   C. Paste and click Run
+   D. Verify success
+   
+   E. Click SQL button again
+   F. Copy content from: database/migration_add_timer_tracking.sql
+   G. Paste and click Run
+   H. Verify success
+
+3. Commit and push code to GitHub:
+   git add .
+   git commit -m "Add payment receipt upload feature"
+   git push origin main
+
+4. Render will auto-deploy (if configured)
+   OR manually deploy in Render dashboard
+
+5. Configure payment settings on live site:
+   - Login as admin on live site
+   - Go to admin/payment-settings.php
+   - Fill in payment details
+   - Save
+
+6. Test on live site!
+
+========================================
+FEATURES READY TO USE:
+========================================
+
+✅ Walk-in reservations in stats/reports (DONE)
+✅ Search reservations (DONE)
+✅ Mark reservations as complete (DONE)
+✅ PostgreSQL conversion (DONE)
+✅ Admin registration (DONE)
+⚠️ Persistent timers (CODED - NEEDS MIGRATION)
+⚠️ Payment receipt upload (CODED - NEEDS MIGRATION)
+
+========================================
+FILES TO READ FOR HELP:
+========================================
+
+📖 QUICK_START_PAYMENT_FEATURE.txt
+   → Step-by-step guide to setup payment feature
+
+📖 MIGRATIONS_TO_RUN.txt
+   → Detailed migration instructions with verification steps
+
+📖 PAYMENT_RECEIPT_UPLOAD_FEATURE.txt
+   → Complete technical documentation
+
+📖 TASK_7_PAYMENT_RECEIPT_COMPLETE.txt
+   → Implementation summary and testing checklist
+
+========================================
+DEPLOYMENT REMINDER:
+========================================
+
+⚠️ IMPORTANT: Render is deploying from MASTER branch
+You mentioned deployment errors showing MySQL functions.
+This means Render is using old code from 'master' branch.
+
+FIX:
+1. Go to Render Dashboard
+2. Click your web service
+3. Go to Settings
+4. Find "Branch" setting
+5. Change from "master" to "main"
+6. Save
+7. Redeploy
+
+Your PostgreSQL-compatible code is on the MAIN branch!
+
+========================================
+CURRENT STATUS:
+========================================
+
+CODE: ✅ Complete and ready
+MIGRATIONS: ❌ Need to run (2 files)
+LOCAL TESTING: ⏳ Waiting for you
+RENDER DEPLOYMENT: ⏳ Waiting for you
+
+START HERE: Run migrations in phpMyAdmin (Step 1)
+THEN: Configure payment settings
+THEN: Test locally
+THEN: Deploy to Render
+
+========================================

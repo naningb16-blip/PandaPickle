@@ -1,0 +1,132 @@
+========================================
+PAYMENT RECEIPT UPLOAD FEATURE - COMPLETE
+========================================
+
+OVERVIEW:
+---------
+Users can now upload payment receipts after clicking "Pay Now" on their reservations or open play registrations.
+Admins can then verify these receipts and approve/reject payments.
+
+IMPLEMENTATION DETAILS:
+-----------------------
+
+1. USER FLOW:
+   - User clicks "💳 Pay Now" button on dashboard
+   - Redirected to payment-info.php showing payment details (GCash, Bank info)
+   - User makes payment via GCash or Bank Transfer
+   - User uploads receipt image (JPG, PNG, GIF up to 5MB)
+   - Receipt stored in uploads/receipts/ directory
+   - Payment status changes to "pending_verification"
+   - User sees confirmation message
+
+2. ADMIN VERIFICATION FLOW:
+   - Admin visits admin/payments.php
+   - Sees all payments with status badges
+   - Can view uploaded receipt thumbnails (click to enlarge)
+   - Can "Verify Paid" or "Reject" payments
+   - Verified payments marked with admin ID and timestamp
+
+3. FILES MODIFIED:
+   ✅ payment-info.php - Added receipt upload form and handler
+   ✅ admin/payments.php - Already has receipt display and verification (existing)
+   ✅ dashboard.php - Already has "Pay Now" buttons (existing)
+   ✅ database/schema.sql - proof_image column already exists
+   ✅ assets/css/style.css - proof-thumb style already exists
+
+4. FILES CREATED:
+   ✅ uploads/receipts/.gitkeep - Directory for receipt uploads
+   ✅ uploads/.gitignore - Protect uploaded files from git
+   ✅ database/migration_add_payment_method.sql - Optional payment method tracking
+
+5. DATABASE STRUCTURE:
+   payments table already has:
+   - proof_image VARCHAR(255) - Stores path to uploaded receipt
+   - payment_status - Has 'pending_verification' status
+   - verified_by - Admin ID who verified
+   - verified_at - Timestamp of verification
+
+6. PAYMENT STATUSES:
+   - unpaid: No payment made yet
+   - pending_verification: Receipt uploaded, waiting for admin review
+   - paid: Admin verified payment
+   - rejected: Admin rejected payment (user must re-upload)
+
+7. SECURITY FEATURES:
+   - File type validation (only JPG, PNG, GIF)
+   - File size limit (5MB max)
+   - Unique filename generation (prevents overwrites)
+   - User can only upload for their own bookings
+   - Receipts stored outside public access (uploads/ folder)
+
+8. MIGRATIONS TO RUN:
+   ✅ database/migration_add_payment_settings.sql (REQUIRED - creates payment settings table)
+   ⚠️ database/migration_add_payment_method.sql (OPTIONAL - adds payment_method and admin_notes columns)
+
+DEPLOYMENT STEPS:
+-----------------
+
+LOCAL (MySQL/phpMyAdmin):
+1. Run migration_add_payment_settings.sql in phpMyAdmin
+2. (Optional) Run migration_add_payment_method.sql
+3. Test receipt upload feature
+4. Verify admin can see and approve receipts
+
+RENDER (PostgreSQL/TablePlus):
+1. Connect to Render PostgreSQL via TablePlus
+2. Run migration_add_payment_settings.sql
+3. (Optional) Run migration_add_payment_method.sql
+4. Create uploads/receipts directory on Render (should auto-create)
+5. Test on live site
+
+TESTING CHECKLIST:
+------------------
+✅ User can view payment information
+✅ User can upload receipt image
+✅ File validation works (reject invalid file types)
+✅ Receipt saved to uploads/receipts/ with unique filename
+✅ Payment status changes to pending_verification
+✅ Admin can view receipt thumbnail in admin/payments.php
+✅ Admin can click thumbnail to view full image
+✅ Admin can verify payment as paid
+✅ Admin can reject payment
+✅ User sees uploaded receipt on return visit to payment-info.php
+✅ User cannot re-upload if receipt already exists (unless rejected)
+
+ADMIN CONFIGURATION:
+--------------------
+Admins should configure payment settings at:
+admin/payment-settings.php
+
+Settings include:
+- GCash Number
+- GCash Account Name
+- Bank Name
+- Bank Account Number
+- Bank Account Name
+- Payment Instructions
+- Contact Number
+
+These settings are displayed to users on the payment-info.php page.
+
+FOLDER STRUCTURE:
+-----------------
+PandaPickle/
+├── uploads/
+│   ├── .gitignore (protects uploaded files)
+│   └── receipts/
+│       ├── .gitkeep (ensures directory exists in git)
+│       └── receipt_[timestamp]_[uniqueid].jpg (uploaded receipts)
+├── payment-info.php (user payment page with upload)
+├── dashboard.php (has Pay Now buttons)
+└── admin/
+    └── payments.php (admin verification page)
+
+NEXT STEPS:
+-----------
+1. Run migration_add_payment_settings.sql on both local and Render databases
+2. Configure payment settings via admin/payment-settings.php
+3. Test complete user flow: Pay Now → Upload Receipt → Admin Verify
+4. Push code to GitHub main branch
+5. Deploy to Render
+
+FEATURE COMPLETE! ✅

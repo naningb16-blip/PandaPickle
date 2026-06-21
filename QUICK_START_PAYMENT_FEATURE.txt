@@ -1,0 +1,117 @@
+========================================
+QUICK START: PAYMENT RECEIPT UPLOAD
+========================================
+
+🚀 GETTING STARTED (5 MINUTES)
+-------------------------------
+
+STEP 1: RUN DATABASE MIGRATION
+-------------------------------
+1. Open phpMyAdmin (http://localhost/phpmyadmin)
+2. Select 'pandapickle' database
+3. Click "SQL" tab
+4. Open file: database/migration_add_payment_settings.sql
+5. Copy all content and paste in SQL box
+6. Click "Go"
+7. You should see "7 rows inserted"
+
+STEP 2: CONFIGURE PAYMENT SETTINGS
+----------------------------------
+1. Login as admin
+2. Go to admin dashboard
+3. Click "⚙️ Payment Settings" in left sidebar
+4. Fill in your details:
+   - GCash Number: (e.g., 09123456789)
+   - GCash Name: (e.g., Juan Dela Cruz)
+   - Bank Name: (e.g., BDO, BPI, Metrobank)
+   - Bank Account Number: (e.g., 1234567890)
+   - Bank Account Name: (e.g., PandaPickle Court)
+   - Payment Instructions: (Tell users what to do after payment)
+   - Contact Number: (Your contact number for inquiries)
+5. Click "Save Settings"
+
+STEP 3: TEST THE FEATURE
+-------------------------
+1. Logout from admin
+2. Login as regular user (or create test user)
+3. Make a reservation or register for open play
+4. Go to Dashboard
+5. You should see "💳 Pay Now" button next to unpaid items
+6. Click "Pay Now"
+7. You'll see your payment details (GCash, Bank info)
+8. Scroll down to "Upload Payment Receipt" section
+9. Choose an image file (screenshot or photo of receipt)
+10. Click "Upload Receipt"
+11. Should see success message!
+
+STEP 4: VERIFY PAYMENT AS ADMIN
+--------------------------------
+1. Login as admin
+2. Click "💰 Verify Payments" in left sidebar
+3. You should see the payment with uploaded receipt
+4. Click the receipt thumbnail to view full size
+5. Click "Verify Paid" to approve OR "Reject" to deny
+6. User will see updated status on their dashboard
+
+THAT'S IT! 🎉
+-------------
+
+USER FLOW IN REAL USE:
+----------------------
+1. Customer books court or registers for open play
+2. Customer clicks "Pay Now" on dashboard
+3. Customer sees your GCash/Bank details
+4. Customer sends money via GCash or Bank Transfer
+5. Customer takes screenshot/photo of receipt
+6. Customer uploads receipt
+7. You (admin) receive notification
+8. You verify receipt is valid
+9. You click "Verify Paid"
+10. Customer can now play! ✅
+
+TROUBLESHOOTING:
+---------------
+
+❌ "Table payment_settings doesn't exist"
+   → Run the migration (Step 1)
+
+❌ "Pay Now button not showing"
+   → Payment status must be 'unpaid'
+   → Check user has reservations/registrations
+
+❌ "Upload failed"
+   → Check file is JPG, PNG, or GIF
+   → Check file is under 5MB
+   → Check uploads/receipts/ folder exists (auto-creates)
+
+❌ "Can't see receipt in admin"
+   → Go to admin/payments.php (💰 Verify Payments)
+   → Check payment_status is 'pending_verification'
+
+ADMIN PAGES:
+-----------
+- admin/payment-settings.php → Configure your payment info
+- admin/payments.php → Verify uploaded receipts
+
+USER PAGES:
+-----------
+- dashboard.php → See "Pay Now" buttons
+- payment-info.php → View payment details & upload receipt
+
+FOR RENDER DEPLOYMENT:
+---------------------
+After testing locally:
+1. Run same migration in Render PostgreSQL (via TablePlus)
+2. Push code to GitHub main branch
+3. Render will auto-deploy
+4. Configure payment settings on live site
+5. Test with real users!
+
+NEED HELP?
+----------
+Check these files:
+- PAYMENT_RECEIPT_UPLOAD_FEATURE.txt → Full documentation
+- MIGRATIONS_TO_RUN.txt → Database migration guide
+- TASK_7_PAYMENT_RECEIPT_COMPLETE.txt → Implementation summary
+
+========================================

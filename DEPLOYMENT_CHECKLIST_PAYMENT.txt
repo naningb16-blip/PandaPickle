@@ -1,0 +1,270 @@
+╔════════════════════════════════════════════════════════════╗
+║  🚀 PAYMENT RECEIPT FEATURE - DEPLOYMENT CHECKLIST        ║
+╚════════════════════════════════════════════════════════════╝
+
+Print this and check off items as you complete them!
+
+═══════════════════════════════════════════════════════════
+📋 PHASE 1: LOCAL DATABASE SETUP
+═══════════════════════════════════════════════════════════
+
+□ Open phpMyAdmin (http://localhost/phpmyadmin)
+□ Select 'pandapickle' database
+□ Click "SQL" tab
+
+□ Copy content from: database/migration_add_payment_settings.sql
+□ Paste in SQL box
+□ Click "Go"
+□ Verify: "7 rows inserted" message
+
+□ Click "SQL" tab again
+□ Copy content from: database/migration_add_timer_tracking.sql
+□ Paste in SQL box
+□ Click "Go"
+□ Verify: Success message
+
+□ Verify tables exist:
+   □ Run: SELECT * FROM payment_settings;
+   □ Run: DESCRIBE exclusive_reservations;
+   □ Check for: timer_started_at, timer_status columns
+
+═══════════════════════════════════════════════════════════
+⚙️ PHASE 2: CONFIGURE PAYMENT SETTINGS (LOCAL)
+═══════════════════════════════════════════════════════════
+
+□ Open browser: http://localhost/PandaPickle
+□ Login as admin
+□ Click "⚙️ Payment Settings" in sidebar
+
+□ Fill in form:
+   □ GCash Number: _________________________
+   □ GCash Name: ___________________________
+   □ Bank Name: _____________________________
+   □ Bank Account Number: ___________________
+   □ Bank Account Name: _____________________
+   □ Payment Instructions: __________________
+      ________________________________________
+   □ Contact Number: ________________________
+
+□ Click "Save Settings"
+□ Verify: "Settings saved successfully" message
+
+═══════════════════════════════════════════════════════════
+🧪 PHASE 3: LOCAL TESTING
+═══════════════════════════════════════════════════════════
+
+TEST RECEIPT UPLOAD:
+□ Logout from admin
+□ Login as regular user (or create test user)
+□ Make a new reservation
+□ Go to Dashboard
+□ Find reservation in "Upcoming Reservations"
+□ Verify: "💳 Pay Now" button is visible
+□ Click "Pay Now"
+
+□ Verify payment info page shows:
+   □ Your GCash details
+   □ Your Bank details
+   □ Correct booking details
+   □ Amount to pay
+   □ Upload receipt section
+
+□ Select an image file (screenshot or photo)
+□ Click "Upload Receipt"
+□ Verify: Success message appears
+□ Verify: Redirected to dashboard
+□ Verify: Payment status changed
+
+□ Go back to payment-info.php
+□ Verify: Receipt image is displayed
+□ Verify: "Receipt Already Uploaded" message
+
+TEST ADMIN VERIFICATION:
+□ Login as admin
+□ Click "💰 Verify Payments" in sidebar
+□ Find the test payment
+□ Verify: Receipt thumbnail visible
+□ Click thumbnail to view full image
+□ Click "Verify Paid"
+□ Verify: Success message
+□ Verify: Status changed to "paid"
+
+□ Login as user again
+□ Go to dashboard
+□ Verify: Payment status shows "paid"
+□ Verify: "Pay Now" button is gone
+
+TEST TIMER PERSISTENCE:
+□ As admin, go to Reservations
+□ Find an approved reservation
+□ Click "Start Timer"
+□ Wait 10 seconds
+□ Refresh the page (F5)
+□ Verify: Timer continues from correct time (not reset)
+
+═══════════════════════════════════════════════════════════
+🗄️ PHASE 4: RENDER DATABASE SETUP
+═══════════════════════════════════════════════════════════
+
+□ Open TablePlus
+□ Connect to Render PostgreSQL:
+   Host: dpg-d8ro161o3t8c73ebfv20-a.oregon-postgres.render.com
+   Port: 5432
+   Database: pandapickle
+   User: pandapickle_user
+   Password: [your password from Render]
+
+□ Click "SQL" button (or Cmd/Ctrl + E)
+
+□ Copy content from: database/migration_add_payment_settings.sql
+□ Paste in SQL window
+□ Click "Run" (or Cmd/Ctrl + Enter)
+□ Verify: Success message
+
+□ Copy content from: database/migration_add_timer_tracking.sql
+□ Paste in SQL window
+□ Click "Run"
+□ Verify: Success message
+
+□ Verify tables:
+   □ Run: SELECT * FROM payment_settings;
+   □ Should return 7 rows
+
+═══════════════════════════════════════════════════════════
+📤 PHASE 5: GIT COMMIT & PUSH
+═══════════════════════════════════════════════════════════
+
+□ Open terminal/command prompt
+□ Navigate to project: cd c:\xampp\htdocs\PandaPickle
+
+□ Check status: git status
+□ Stage changes: git add .
+□ Commit: git commit -m "Add payment receipt upload feature"
+□ Push to main: git push origin main
+□ Verify: No errors
+
+═══════════════════════════════════════════════════════════
+🚀 PHASE 6: RENDER DEPLOYMENT
+═══════════════════════════════════════════════════════════
+
+□ Open Render Dashboard (https://render.com)
+□ Click your web service (PandaPickle)
+□ Go to "Settings"
+
+IMPORTANT - FIX BRANCH:
+□ Find "Branch" setting
+□ Current value: master ❌
+□ Change to: main ✅
+□ Click "Save"
+
+□ Go to "Manual Deploy" (or wait for auto-deploy)
+□ Click "Deploy latest commit"
+□ Wait for deployment to complete (check logs)
+□ Verify: "Deploy succeeded" message
+
+═══════════════════════════════════════════════════════════
+⚙️ PHASE 7: CONFIGURE PAYMENT SETTINGS (LIVE)
+═══════════════════════════════════════════════════════════
+
+□ Open your live site: https://[your-render-url].onrender.com
+□ Login as admin
+□ Click "⚙️ Payment Settings"
+
+□ Fill in with REAL payment details:
+   □ Your real GCash number
+   □ Your real GCash account name
+   □ Your real bank name
+   □ Your real bank account number
+   □ Your real bank account name
+   □ Clear payment instructions for customers
+   □ Your contact number
+
+□ Click "Save Settings"
+□ Verify: Success message
+
+═══════════════════════════════════════════════════════════
+✅ PHASE 8: LIVE TESTING
+═══════════════════════════════════════════════════════════
+
+□ Create test user account on live site
+□ Make a test reservation
+□ Click "Pay Now"
+□ Verify: Your real payment details are shown
+□ Upload a test receipt image
+□ Verify: Upload successful
+
+□ Login as admin
+□ Go to "Verify Payments"
+□ Verify: Test payment appears
+□ View receipt image
+□ Verify payment as "paid"
+
+□ Login as test user
+□ Verify: Status updated to "paid"
+
+□ Test timer persistence on live site:
+   □ Start timer on a reservation
+   □ Refresh page
+   □ Verify: Timer continues
+
+═══════════════════════════════════════════════════════════
+🎯 FINAL VERIFICATION
+═══════════════════════════════════════════════════════════
+
+□ All features working locally
+□ All features working on live site
+□ Migrations run successfully
+□ Payment settings configured
+□ Receipt upload/verification tested
+□ Timer persistence tested
+□ No errors in browser console
+□ No errors in Render logs
+
+═══════════════════════════════════════════════════════════
+📞 IF YOU ENCOUNTER ISSUES:
+═══════════════════════════════════════════════════════════
+
+ISSUE: "Table payment_settings doesn't exist"
+FIX: □ Run migration_add_payment_settings.sql
+
+ISSUE: "Column timer_started_at doesn't exist"
+FIX: □ Run migration_add_timer_tracking.sql
+
+ISSUE: Upload fails with "mkdir() failed"
+FIX: □ Create uploads/receipts/ folder manually
+     □ Set permissions to 755
+
+ISSUE: Render still showing MySQL errors
+FIX: □ Verify branch is set to 'main' in Render
+     □ Redeploy from Render dashboard
+
+ISSUE: Images not loading
+FIX: □ Check uploads/receipts/ folder exists
+     □ Check file permissions
+     □ Check image path in database
+
+ISSUE: Payment settings not saving
+FIX: □ Check migration was run successfully
+     □ Check browser console for errors
+
+═══════════════════════════════════════════════════════════
+✨ CONGRATULATIONS! ✨
+═══════════════════════════════════════════════════════════
+
+If all checkboxes are marked, your payment receipt upload
+feature is fully deployed and operational!
+
+Users can now:
+✅ View your payment details
+✅ Upload payment receipts
+✅ Track payment status
+
+You can now:
+✅ Verify uploaded receipts
+✅ Approve/reject payments
+✅ Track all transactions
+
+Date completed: _____________________
+Deployed by: ________________________
+
+═══════════════════════════════════════════════════════════

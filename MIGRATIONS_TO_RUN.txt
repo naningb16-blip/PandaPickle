@@ -1,0 +1,109 @@
+========================================
+DATABASE MIGRATIONS - DEPLOYMENT CHECKLIST
+========================================
+
+IMPORTANT: These migrations need to be run on BOTH your local database AND Render PostgreSQL database.
+
+REQUIRED MIGRATIONS (Must run):
+-------------------------------
+
+1. ✅ migration_add_payment_settings.sql
+   Purpose: Creates payment_settings table for admin payment info (GCash, Bank)
+   Status: MUST RUN - Required for "Pay Now" feature
+   
+2. ⚠️ migration_add_timer_tracking.sql
+   Purpose: Adds timer_started_at and timer_status columns for persistent timers
+   Status: MUST RUN - Required for timer persistence across page reloads
+
+OPTIONAL MIGRATIONS (Enhancement):
+----------------------------------
+
+3. ℹ️ migration_add_payment_method.sql
+   Purpose: Adds payment_method and admin_notes columns to payments table
+   Status: OPTIONAL - Nice to have for tracking payment method used (GCash vs Bank)
+
+HOW TO RUN MIGRATIONS:
+----------------------
+
+LOCAL DATABASE (MySQL via phpMyAdmin):
+1. Open phpMyAdmin (http://localhost/phpmyadmin)
+2. Select your database (e.g., 'pandapickle')
+3. Click "SQL" tab
+4. Copy entire content of migration file
+5. Paste and click "Go"
+6. Verify "Query OK" message
+
+RENDER DATABASE (PostgreSQL via TablePlus):
+1. Open TablePlus
+2. Connect to Render PostgreSQL:
+   Host: dpg-d8ro161o3t8c73ebfv20-a.oregon-postgres.render.com
+   Port: 5432
+   Database: pandapickle
+   User: pandapickle_user
+   Password: [your password]
+3. Click "SQL" button (or press Cmd/Ctrl + E)
+4. Copy entire content of migration file
+5. Paste and click "Run" (or press Cmd/Ctrl + Enter)
+6. Verify success message
+
+MIGRATION FILES LOCATION:
+------------------------
+All migration files are in: database/
+
+- migration_add_payment_settings.sql ✅ REQUIRED
+- migration_add_timer_tracking.sql ⚠️ REQUIRED
+- migration_add_payment_method.sql ℹ️ OPTIONAL
+
+VERIFICATION STEPS:
+------------------
+
+After running migrations, verify:
+
+1. Payment Settings Migration:
+   Query: SELECT * FROM payment_settings;
+   Expected: Should return 7 rows (gcash_number, gcash_name, bank_name, etc.)
+
+2. Timer Tracking Migration:
+   Query: SELECT timer_started_at, timer_status FROM exclusive_reservations LIMIT 1;
+   Expected: Should return columns with NULL values (no errors)
+
+3. Payment Method Migration (if run):
+   Query: SELECT payment_method, admin_notes FROM payments LIMIT 1;
+   Expected: Should return columns with NULL values (no errors)
+
+DEPLOYMENT ORDER:
+----------------
+
+STEP 1: Run migrations on LOCAL database first
+STEP 2: Test all features locally (Pay Now, timer persistence)
+STEP 3: Commit and push code to GitHub main branch
+STEP 4: Run migrations on RENDER database
+STEP 5: Deploy to Render (should auto-deploy from GitHub)
+STEP 6: Test on live site
+
+ROLLBACK (If needed):
+--------------------
+
+If migrations cause issues, you can rollback:
+
+1. Payment Settings:
+   DROP TABLE payment_settings;
+
+2. Timer Tracking:
+   ALTER TABLE exclusive_reservations 
+   DROP COLUMN timer_started_at, 
+   DROP COLUMN timer_status;
+
+3. Payment Method:
+   ALTER TABLE payments 
+   DROP COLUMN payment_method, 
+   DROP COLUMN admin_notes;
+
+CURRENT STATUS:
+--------------
+❌ Not yet run on local database
+❌ Not yet run on Render database
+
+After running migrations, update this file with:
+✅ Run on local database (date: _______)
+✅ Run on Render database (date: _______)

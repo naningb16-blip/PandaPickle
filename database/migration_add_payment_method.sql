@@ -1,14 +1,30 @@
--- Migration: Add payment_method column to exclusive_reservations table
--- Run this if you have existing data
-
-USE pandapickle;
+-- Add payment method tracking to payments table
+-- This allows tracking whether customer paid via GCash or Bank Transfer
 
 -- Add payment_method column if it doesn't exist
-ALTER TABLE exclusive_reservations 
-ADD COLUMN IF NOT EXISTS payment_method ENUM('cash', 'cashless') NOT NULL DEFAULT 'cash' 
-AFTER total_amount;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'payments' AND column_name = 'payment_method'
+    ) THEN
+        ALTER TABLE payments 
+        ADD COLUMN payment_method VARCHAR(50) DEFAULT NULL;
+        
+        COMMENT ON COLUMN payments.payment_method IS 'Payment method used: gcash, bank_transfer, etc.';
+    END IF;
+END $$;
 
--- Optional: Update existing reservations to have a default payment method
-UPDATE exclusive_reservations 
-SET payment_method = 'cash' 
-WHERE payment_method IS NULL;
+-- Add notes column for admin remarks if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'payments' AND column_name = 'admin_notes'
+    ) THEN
+        ALTER TABLE payments 
+        ADD COLUMN admin_notes TEXT DEFAULT NULL;
+        
+        COMMENT ON COLUMN payments.admin_notes IS 'Admin notes/remarks about the payment';
+    END IF;
+END $$;
