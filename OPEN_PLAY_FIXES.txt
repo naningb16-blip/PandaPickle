@@ -1,0 +1,63 @@
+OPEN PLAY REGISTRATION FIXES
+============================
+
+Date: June 20, 2026
+
+ISSUES FIXED:
+-------------
+
+1. Payment Status Reverting to Unpaid
+   - Problem: When admin clicked the payment status dropdown, the form would reload but the status wouldn't save
+   - Root Cause: The form was using onchange="this.form.submit()" but missing the submit button with name="update_payment"
+   - Solution: Added an "Update" button with name="update_payment" to properly trigger the POST handler
+
+2. Missing User Name and Partner Name Fields
+   - Problem: Only partner name was being collected during registration
+   - Solution: Added user_name field to database and registration form
+   - Now users can enter both their own name and their partner's name
+
+DATABASE CHANGES:
+-----------------
+
+1. Updated database/schema.sql
+   - Added user_name VARCHAR(100) column to open_play_registrations table
+
+2. Updated database/migration_open_play_updates.sql
+   - Added migration to add user_name column to existing databases
+
+CODE CHANGES:
+-------------
+
+1. open-play.php (User Registration Page)
+   - Added user_name field to registration form
+   - Updated validation to check both user_name and partner_name
+   - Updated INSERT query to include user_name
+   - Updated success message to show user_name instead of fullname from users table
+   - Updated "My Registrations" table to display both team player names
+
+2. admin/open-play.php (Admin Management Page)
+   - Fixed payment status update form by adding explicit submit button
+   - Changed from onchange auto-submit to button-based submit
+   - Updated registrations table to show both team player names
+   - Changed column header from "Customer" to "Team Players" and "Customer Email"
+
+HOW TO APPLY:
+-------------
+
+1. Run the migration SQL:
+   mysql -u root -p pandapickle < database/migration_open_play_updates.sql
+
+2. The code changes are already applied to the PHP files
+
+3. Test the following:
+   - User registration: Enter both your name and partner's name
+   - Admin payment update: Select payment status and click "Update" button
+   - Verify status persists after page reload
+   - Check that both team names display correctly in all tables
+
+NOTES:
+------
+
+- Existing registrations without user_name will show "You" in the user's view
+- Admin view will fall back to the fullname from users table if user_name is NULL
+- All new registrations will capture both user_name and partner_name explicitly

@@ -1,0 +1,123 @@
+PLAY WITH FRIENDS - UPDATED FEATURE
+====================================
+
+## WHAT CHANGED
+
+The "Play with Friends" feature has been completely redesigned based on your needs!
+
+## OLD WAY (Wrong):
+- Register only 2 players (you + partner)
+- Enter a "friend group name"
+- Hope your friends register separately with same name
+- System matches you later
+
+## NEW WAY (Correct!):
+- Register ALL 4 PLAYERS at once!
+- Team 1: Your name + Partner name
+- Team 2: Friend 1 + Friend 2
+- Pay PHP 200 total (both teams together)
+- Creates complete match immediately!
+
+## HOW IT WORKS NOW
+
+### For Users (open-play.php):
+
+**Option 1: Random Match (PHP 100)**
+- Enter your name + partner name
+- System will randomly match you with another team
+- Pay PHP 100 for your team (2 players)
+
+**Option 2: Play with Friends (PHP 200)**
+- Enter Team 1: Your name + Partner name
+- Enter Team 2: Friend 1 name + Friend 2 name
+- All 4 players registered together!
+- Pay PHP 200 total (all 4 players)
+- You play together - no random matching needed!
+
+### Registration Form Example:
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Match Preference:                                    │
+│ ○ Random Match (PHP 100)                            │
+│ ● Play with Friends (PHP 200 - all 4 players)       │
+│                                                      │
+│ Register All 4 Players (2 Teams):                   │
+│ Team 1: [Your Name]  [Your Partner]                 │
+│ Team 2: [Friend 1]   [Friend 2]                     │
+│                                                      │
+│ Payment: [Cash ▼]                                   │
+│                                                      │
+│ 💰 Total: PHP 200 for all 4 players                 │
+│ ✅ You'll play together immediately!                 │
+│                                                      │
+│ [Register]                                           │
+└─────────────────────────────────────────────────────┘
+```
+
+## EXAMPLE SCENARIO
+
+**You want to play with your friends:**
+
+1. You open registration form
+2. Select "Play with Friends"
+3. Fill in:
+   - Team 1: Derodd & Debie (you and your partner)
+   - Team 2: Noel & Niel (your friends)
+4. Select payment method
+5. Click Register
+6. System creates:
+   - Registration 1: Derodd & Debie (PHP 100)
+   - Registration 2: Noel & Niel (PHP 100)
+   - Total: PHP 200
+   - Both teams linked together automatically!
+
+7. After admin approves:
+   - System creates match: Derodd & Debie vs Noel & Niel
+   - Gets assigned game number (e.g., Game 1)
+   - You play together!
+
+## BENEFITS
+
+✅ Register all 4 players at once
+✅ Pay PHP 200 total (correct amount)
+✅ Don't need to coordinate with friends to register separately
+✅ No confusion with "group names"
+✅ Creates complete match immediately
+✅ Admin just approves and generates matches
+
+## ADMIN SIDE
+
+When admin views registrations:
+- Sees 2 team registrations with same friend_group ID
+- Both teams show "Play with Friends" preference
+- Both teams linked together automatically
+- When generating matches, they're matched together
+- Gets game number assigned
+
+## PAYMENT
+
+**Random Match:**
+- PHP 100 per team (2 players)
+- You pay for your team only
+
+**Play with Friends:**
+- PHP 200 total (4 players / 2 teams)
+- Creates 2 separate registrations:
+  * Team 1: PHP 100
+  * Team 2: PHP 100
+- Both need admin approval
+- Both marked as paid when you pay PHP 200 total
+
+## TECHNICAL DETAILS
+
+- Both teams get same unique friend_group ID (e.g., "friends_abc123")
+- Both teams linked together in database
+- Match generation pairs them together
+- They get sequential game number
+- Can be tracked in Friend Groups Schedule
+
+====================================
+This is the correct implementation!
+No more confusion about group names!
+====================================

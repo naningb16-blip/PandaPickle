@@ -1,0 +1,217 @@
+MATCH GENERATION - INCLUDING WALK-IN PLAYERS
+============================================
+
+Date: June 20, 2026
+
+SOLUTION IMPLEMENTED:
+---------------------
+
+Changed the matches system to use REGISTRATION IDs instead of USER IDs.
+This allows both walk-in players and account holders to be matched together.
+
+KEY CHANGES:
+------------
+
+1. DATABASE STRUCTURE:
+
+   OLD (user-based):
+   - player1_id → references users(id)
+   - player2_id → references users(id)
+   - player3_id → references users(id)
+   - player4_id → references users(id)
+   Problem: Walk-in players have user_id = NULL
+
+   NEW (registration-based):
+   - player1_reg_id → references open_play_registrations(id)
+   - player2_reg_id → references open_play_registrations(id)
+   - player3_reg_id → references open_play_registrations(id)
+   - player4_reg_id → references open_play_registrations(id)
+   Solution: Every player (walk-in or online) has a registration
+
+2. MATCH GENERATION LOGIC:
+
+   OLD:
+   - Select user_id from registrations
+   - Exclude NULL user_ids (walk-ins)
+   
+   NEW:
+   - Select registration id from registrations
+   - Include ALL approved registrations (online + walk-in)
+
+3. MATCH DISPLAY:
+
+   OLD:
+   - JOIN users table to get player names
+   - Only showed account names
+   
+   NEW:
+   - JOIN registrations table
+   - LEFT JOIN users table
+   - Show team info: "Player Name & Partner Name"
+   - Works for both walk-in and online players
+
+HOW IT WORKS NOW:
+-----------------
+
+Registration Structure:
+- Each registration = 1 TEAM (2 players: user + partner)
+- Online registration: user_id = X, user_name = name, partner_name = partner
+- Walk-in registration: user_id = NULL, user_name = name, partner_name = partner
+
+Match Structure (4 registrations = 4 teams = 8 players):
+- player1_reg_id → Team 1 (Player A & Partner B)
+- player2_reg_id → Team 2 (Player C & Partner D)
+- player3_reg_id → Team 3 (Player E & Partner F)
+- player4_reg_id → Team 4 (Player G & Partner H)
+
+Doubles Match Format:
+- Team 1 vs Team 2 (4 players)
+- Team 3 vs Team 4 (4 players)
+
+Match Generation:
+✓ Selects all approved registrations
+✓ Includes online players (with accounts)
+✓ Includes walk-in players (without accounts)
+✓ Randomizes order
+✓ Groups into sets of 4 teams
+✓ Creates matches
+
+DATABASE CHANGES:
+-----------------
+
+1. database/schema.sql
+   - Updated open_play_matches table structure
+   - Changed player columns from user_id to reg_id
+
+2. database/migration_matches_use_registrations.sql
+   - Migration script for existing databases
+   - Drops old matches table
+   - Creates new matches table with registration references
+
+CODE CHANGES:
+-------------
+
+1. admin/open-play.php
+
+   a) Match Generation (generate_matches handler):
+      - Changed query to select reg.id instead of reg.user_id
+      - Removed "AND reg.user_id IS NOT NULL" filter
+      - Updated INSERT to use player1_reg_id, player2_reg_id, etc.
+      - Updated success message
+
+   b) Matches Display Query:
+      - JOIN open_play_registrations (4 times for 4 teams)
+      - LEFT JOIN users (4 times, optional for walk-ins)
+      - Select user_name, partner_name, and fullname
+      - Show team info for each registration
+
+   c) Matches Table Display:
+      - Show "Team 1: Name & Partner vs Team 2: Name & Partner"
+      - Use user_name if available, fallback to fullname
+      - Works for both walk-in and online registrations
+
+   d) Updated note below sessions table
+
+HOW TO APPLY:
+-------------
+
+1. Run the migration SQL:
+   mysql -u root -p pandapickle < database/migration_matches_use_registrations.sql
+
+   WARNING: This will DELETE all existing matches!
+   If you have important match data, back it up first:
+   mysqldump -u root -p pandapickle open_play_matches > matches_backup.sql
+
+2. The code changes are already applied to:
+   - database/schema.sql
+   - admin/open-play.php
+
+3. Test the following:
+   - Register online players
+   - Register walk-in players
+   - Generate matches
+   - Verify both types appear in matches
+   - Check match display shows team names correctly
+
+TESTING:
+--------
+
+Test Scenario 1: Mix of Online and Walk-in
+1. Create session
+2. User A registers online (with account)
+3. Admin registers walk-in Team B
+4. User C registers online
+5. Admin registers walk-in Team D
+6. Click "Generate Matches"
+✓ Should create match with all 4 teams
+✓ Should show all team names correctly
+
+Test Scenario 2: Only Walk-in Players
+1. Create session
+2. Register 4 walk-in teams
+3. Click "Generate Matches"
+✓ Should create matches successfully
+✓ Should show walk-in team names
+
+Test Scenario 3: Only Online Players
+1. Create session
+2. Have 4 users register online
+3. Click "Generate Matches"
+✓ Should work as before
+✓ Should show account names
+
+MATCH DISPLAY FORMAT:
+---------------------
+
+Example display:
+Session: Friday Night Open Play
+Round: 1
+Players:
+  Team 1: John Doe & Jane Smith vs Team 2: Mike Brown & Sarah Lee
+  Team 3: Walk-in Player & Their Partner vs Team 4: Bob Wilson & Alice Green
+Status: Pending
+
+BENEFITS:
+---------
+
+✓ Walk-in players fully integrated into match system
+✓ No manual matching needed
+✓ Fair randomization of all players
+✓ System treats walk-in and online players equally
+✓ Complete match history for all players
+✓ Simplified admin workflow
+
+NOTES:
+------
+
+- Each registration represents ONE TEAM (2 players)
+- Matches need 4 registrations (4 teams = 8 players total)
+- System now stores registration references, not user references
+- Walk-in players have same match capabilities as online players
+- Match generation is truly unified
+
+FILES MODIFIED:
+---------------
+
+1. database/schema.sql
+   - open_play_matches table structure
+
+2. database/migration_matches_use_registrations.sql
+   - New migration file
+
+3. admin/open-play.php
+   - Match generation logic
+   - Matches display query
+   - Matches table HTML
+   - Note text
+
+BACKWARDS COMPATIBILITY:
+------------------------
+
+⚠️ WARNING: This is a BREAKING CHANGE
+
+- Old matches table is dropped
+- Existing matches will be DELETED
+- Cannot preserve old match data automatically
+- Must run migration before system will work
+- Old migration files (WALK_IN_MATCH_GENERATION_NOTES.txt) are now obsolete

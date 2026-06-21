@@ -1,0 +1,197 @@
+MATCH FINISH ACTIONS
+====================
+
+Date: June 20, 2026
+
+FEATURE ADDED:
+--------------
+
+Added "Finish" and "Reset" buttons to generated matches so admins can track match completion status.
+
+KEY FEATURES:
+-------------
+
+1. Match Display Format
+   - Each match group (4 teams) is displayed as TWO separate matches
+   - Match 1: Team 1 vs Team 4
+   - Match 2: Team 2 vs Team 3
+   - Each match has its own status and action buttons
+
+2. Action Buttons
+   
+   a) "Finish" Button (Green)
+      - Appears when match_status = 'pending'
+      - Marks the match as completed
+      - Changes status badge to "completed"
+   
+   b) "Reset" Button (Gray)
+      - Appears when match_status = 'completed'
+      - Resets the match back to pending
+      - Useful if marked as finished by mistake
+
+3. Status Tracking
+   - Pending: Match not yet played (green/yellow badge)
+   - Completed: Match finished (shows as completed badge)
+   - Admin can see at a glance which matches are done
+
+DISPLAY FORMAT:
+---------------
+
+Generated Matches Table:
+
+| Session | Round | Match | Status | Actions |
+|---------|-------|-------|--------|---------|
+| Friday Night | Round 1 | John & Jane vs Mike & Sarah | Pending | [Finish] |
+| Friday Night | Round 1 | Bob & Alice vs Tom & Lisa | Completed | [Reset] |
+| Friday Night | Round 2 | John & Jane vs Bob & Alice | Pending | [Finish] |
+| Friday Night | Round 2 | Mike & Sarah vs Tom & Lisa | Pending | [Finish] |
+
+CODE CHANGES:
+-------------
+
+1. admin/open-play.php
+
+   a) Added finish_match handler:
+      - Accepts match_id via POST
+      - Updates match_status to 'completed'
+      - Shows success message
+      - Redirects back to page
+
+   b) Added reset_match handler:
+      - Accepts match_id via POST
+      - Updates match_status to 'pending'
+      - Shows success message
+      - Redirects back to page
+
+   c) Updated matches display table:
+      - Changed table headers to include "Actions" column
+      - Split each match group into 2 rows:
+        * Row 1: Team 1 vs Team 4
+        * Row 2: Team 2 vs Team 3
+      - Added conditional action buttons based on status
+      - Shows "Finish" for pending matches
+      - Shows "Reset" for completed matches
+
+MATCH PAIRING LOGIC:
+--------------------
+
+When generating matches with 4 teams (8 players total):
+
+Teams in database:
+- player1_reg_id = Team A
+- player2_reg_id = Team B
+- player3_reg_id = Team C
+- player4_reg_id = Team D
+
+Display as 2 matches:
+- Match 1: Team A vs Team D (player1 vs player4)
+- Match 2: Team B vs Team C (player2 vs player3)
+
+This creates balanced matchups for doubles play.
+
+WORKFLOW:
+---------
+
+Admin Workflow:
+1. Generate matches for a session
+2. Players play their matches
+3. Admin clicks "Finish" when match is done
+4. Status changes to "completed"
+5. System tracks which matches are finished
+6. For next round, only players NOT in completed matches are eligible
+
+Round Management:
+- Round 1: Generate matches → Play → Mark as finished
+- Round 2: Generate new matches (excludes completed Round 1 players)
+- Round 3: Generate again (excludes completed Round 2 players)
+- And so on...
+
+BENEFITS:
+---------
+
+✓ Clear visual tracking of match status
+✓ Admin can see which matches are pending
+✓ Admin can see which matches are completed
+✓ Easy to mark matches as finished
+✓ Can undo mistakes with reset button
+✓ Helps organize match flow during sessions
+✓ Next round generation respects completed matches
+
+DATABASE:
+---------
+
+No migration needed. Uses existing match_status column:
+- Values: 'pending', 'playing', 'completed'
+- Default: 'pending'
+- Updated via Finish/Reset buttons
+
+STATUS BADGE COLORS:
+--------------------
+
+(Depends on statusBadgeClass() function)
+- Pending: Usually yellow/warning
+- Completed: Usually green/success
+- Playing: Usually blue/info (not currently used via buttons)
+
+FUTURE ENHANCEMENTS:
+--------------------
+
+1. Add score tracking
+   - Store scores for each match
+   - Show winners
+
+2. Add "Playing" status
+   - Button to mark match as in-progress
+   - Track current matches vs completed
+
+3. Match timer
+   - Track match duration
+   - Show elapsed time
+
+4. Leaderboard
+   - Track wins/losses per team
+   - Show rankings
+
+5. Bulk actions
+   - "Finish All Pending" button
+   - "Reset Round" button
+
+FILES MODIFIED:
+---------------
+
+admin/open-play.php
+- Added finish_match handler
+- Added reset_match handler
+- Updated matches display table
+- Added action buttons column
+
+TESTING:
+--------
+
+Test Scenario 1: Mark Match as Finished
+1. Generate matches for a session
+2. Click "Finish" on first match
+3. Verify status changes to "completed"
+4. Verify button changes to "Reset"
+
+Test Scenario 2: Reset Match
+1. Find a completed match
+2. Click "Reset"
+3. Verify status changes back to "pending"
+4. Verify button changes to "Finish"
+
+Test Scenario 3: Next Round Generation
+1. Generate Round 1 matches
+2. Mark some matches as completed
+3. Generate Round 2 matches
+4. Verify players from completed matches aren't in Round 2
+
+NOTES:
+------
+
+- Each database record represents a match GROUP (4 teams)
+- Displayed as 2 separate matches (Team1 vs Team4, Team2 vs Team3)
+- Both displayed matches share the same status (from database)
+- Clicking Finish on either displayed match finishes BOTH
+- This is because they're part of the same match group
+- Consider them as Court 1 and Court 2 of the same round

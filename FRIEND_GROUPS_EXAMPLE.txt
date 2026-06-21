@@ -1,0 +1,127 @@
+FRIEND GROUPS SCHEDULE - HOW IT WORKS
+======================================
+
+## OVERVIEW
+Friend groups ARE included in match generation and GET game numbers.
+The "Friend Groups Schedule" section shows when each group will play.
+
+## EXAMPLE SCENARIO
+
+### Registration:
+- 4 teams register: "Birthday Party" group (select "Play with Friends")
+- 4 teams register: "Company Outing" group (select "Play with Friends")
+- 6 teams register: "Random Match" (select "Random Match")
+- Total: 14 teams
+
+### Admin Approves & Generates Matches:
+
+When admin clicks "Generate Matches", the system:
+
+**Step 1: Match Birthday Party teams**
+- Team 1 vs Team 2 → Creates match with game_number = 1
+- Team 3 vs Team 4 → Creates match with game_number = 2
+
+**Step 2: Match Company Outing teams**
+- Team 5 vs Team 6 → Creates match with game_number = 3
+- Team 7 vs Team 8 → Creates match with game_number = 4
+
+**Step 3: Match Random teams**
+- Team 9 vs Team 10 → Creates match with game_number = 5
+- Team 11 vs Team 12 → Creates match with game_number = 6
+- Team 13 vs Team 14 → Creates match with game_number = 7
+
+**Total: 7 matches created with game numbers 1-7**
+
+## WHAT ADMIN SEES
+
+### 1. Friend Groups Schedule Section:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Session          │ Date    │ Group Name       │ Teams │ Game Numbers   │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ Jun 21  │ 👥 Birthday      │ 4     │ Game 1-2       │
+│                  │         │    Party         │ teams │                │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ Jun 21  │ 👥 Company       │ 4     │ Game 3-4       │
+│                  │         │    Outing        │ teams │                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+**What This Means:**
+- Birthday Party teams play in Game 1 and Game 2
+- Company Outing teams play in Game 3 and Game 4
+- Admin knows exactly when each group plays!
+
+### 2. Generated Matches Section:
+
+┌────────────────────────────────────────────────────────────────────────┐
+│ Session          │ Round │ Game # │ Match                │ Status      │
+├────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ 1     │ Game 1 │ John & Jane vs       │ Pending     │
+│                  │       │        │ Mike & Sarah         │             │
+├────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ 1     │ Game 2 │ Tom & Lisa vs        │ Pending     │
+│                  │       │        │ Bob & Alice          │             │
+├────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ 1     │ Game 3 │ Steve & Sue vs       │ Pending     │
+│                  │       │        │ David & Diana        │             │
+├────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ 1     │ Game 4 │ Eric & Emma vs       │ Pending     │
+│                  │       │        │ Frank & Fiona        │             │
+├────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ 1     │ Game 5 │ George & Gina vs     │ Pending     │
+│                  │       │        │ Harry & Helen        │             │
+├────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ 1     │ Game 6 │ Ian & Iris vs        │ Pending     │
+│                  │       │        │ Jack & Jill          │             │
+├────────────────────────────────────────────────────────────────────────┤
+│ Friday Open Play │ 1     │ Game 7 │ Karl & Kate vs       │ Pending     │
+│                  │       │        │ Leo & Luna           │             │
+└────────────────────────────────────────────────────────────────────────┘
+
+**Game 1-2**: Birthday Party teams playing each other
+**Game 3-4**: Company Outing teams playing each other
+**Game 5-7**: Random teams playing each other
+
+## KEY POINTS
+
+✅ Friend groups ARE generated into matches
+✅ Friend groups GET game numbers (sequential: 1, 2, 3, 4...)
+✅ Friend Groups Schedule shows WHICH games they'll play
+✅ Generated Matches shows ALL matches with game numbers
+✅ Admin can use game numbers to schedule courts
+
+## BENEFITS
+
+1. **Friend Groups Schedule** = Quick overview of which friend groups play when
+   - See: "Birthday Party plays Game 1-2"
+   - See: "Company Outing plays Game 3-4"
+
+2. **Generated Matches** = Detailed match pairings with game numbers
+   - See: "Game 1: John & Jane vs Mike & Sarah"
+   - See: "Game 2: Tom & Lisa vs Bob & Alice"
+
+3. **Court Scheduling** = Admin uses game numbers to organize
+   - "Court 1: Game 1, then Game 3, then Game 5"
+   - "Court 2: Game 2, then Game 4, then Game 6"
+
+## BEFORE MATCH GENERATION
+
+Friend Groups Schedule shows:
+- Group name
+- Teams count
+- Team names
+- "Not matched yet" (no game numbers)
+
+## AFTER MATCH GENERATION
+
+Friend Groups Schedule shows:
+- Group name
+- Teams count
+- Team names
+- **Game numbers** (e.g., "Game 1-2")
+- Number of matches
+
+======================================
+This feature is ALREADY IMPLEMENTED!
+Just run the migration and test it.
+======================================

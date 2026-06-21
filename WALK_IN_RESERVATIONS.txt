@@ -1,0 +1,117 @@
+WALK-IN RESERVATION FEATURE
+===========================
+
+Date: June 20, 2026
+
+FEATURE OVERVIEW:
+-----------------
+
+This feature allows admins to create reservations for walk-in customers who don't have an account in the system.
+
+KEY FEATURES:
+-------------
+
+1. Customer Information
+   - Admin can enter customer name and phone number
+   - No user account required
+   - Walk-in reservations are marked with "walk-in" badge
+
+2. Automatic Approval & Payment
+   - Walk-in reservations are automatically approved
+   - Payment status is automatically set to "paid"
+   - No need for customer approval workflow
+
+3. Court Availability Check
+   - System validates court availability before creating reservation
+   - Prevents double-booking
+   - Same validation as online reservations
+
+4. Flexible Hourly Rate
+   - Admin can set custom hourly rate (defaults to PHP 250)
+   - Useful for special pricing or promotions
+
+DATABASE CHANGES:
+-----------------
+
+1. Updated database/schema.sql
+   - Made user_id nullable (allows NULL for walk-in customers)
+   - Added customer_name VARCHAR(100) column
+   - Added customer_phone VARCHAR(20) column
+   - Changed foreign key to SET NULL on user delete
+
+2. Created database/migration_add_walkin_customer.sql
+   - Migration script for existing databases
+   - Modifies user_id to nullable
+   - Adds customer_name and customer_phone columns
+   - Updates foreign key constraint
+
+CODE CHANGES:
+-------------
+
+1. admin/reservations.php
+   - Added walk-in reservation creation form
+   - Form fields: customer name, phone, court, date, time, hourly rate, payment method
+   - Added validation for walk-in reservations
+   - Added court availability check
+   - Updated query to show customer_name for walk-in vs fullname for online bookings
+   - Added "Type" column with "walk-in" or "online" badge
+   - Fixed payment status update form (same fix as open play)
+   - Customer display shows: name, phone, and email (if available)
+
+HOW TO USE (ADMIN):
+-------------------
+
+1. Navigate to Admin → Reservations
+2. Fill out "Create Walk-in Reservation" form:
+   - Enter customer name (required)
+   - Enter phone number (required)
+   - Select court
+   - Choose date and time
+   - Enter hours (system calculates from start/end time)
+   - Set hourly rate (defaults to 250)
+   - Choose payment method
+
+3. Click "Create Reservation (Auto-Approved)"
+4. Reservation is created with:
+   - Status: Approved
+   - Payment Status: Paid
+   - Booking Type: Walk-in
+
+RESERVATIONS TABLE:
+-------------------
+
+The table now shows:
+- Code: Reservation code
+- Type: "walk-in" (blue badge) or "online" (gray badge)
+- Customer: Name, phone, email (if online booking)
+- Court, Date, Time
+- Payment information
+- Status and actions
+
+HOW TO APPLY:
+-------------
+
+1. Run the migration SQL:
+   mysql -u root -p pandapickle < database/migration_add_walkin_customer.sql
+
+2. The code changes are already applied to:
+   - database/schema.sql
+   - admin/reservations.php
+
+3. Test the following:
+   - Create a walk-in reservation
+   - Verify it appears with "walk-in" badge
+   - Check that customer name and phone display correctly
+   - Verify online reservations still work normally
+   - Confirm payment status updates persist (fixed bug)
+
+NOTES:
+------
+
+- Walk-in reservations bypass the approval workflow
+- They are created directly in "approved" status
+- Payment is marked as "paid" by default
+- Admin is responsible for collecting payment before creating the reservation
+- Walk-in reservations don't have an associated user account
+- If a walk-in customer later creates an account, their old reservations won't be linked
+- System distinguishes between walk-in and online bookings in the display

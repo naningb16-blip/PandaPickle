@@ -1,0 +1,147 @@
+TROUBLESHOOTING: Friend Groups Not Showing Game Numbers
+=========================================================
+
+## PROBLEM
+Friend Groups Schedule shows "Not matched yet" instead of game numbers.
+
+## POSSIBLE CAUSES & SOLUTIONS
+
+### 1. Migration Not Run Yet ❌
+**Check:** Open http://localhost/PandaPickle/check_game_number.php
+**Solution:** Run the migration:
+
+**Option A - Command Line:**
+```bash
+cd c:\xampp\htdocs\PandaPickle
+mysql -u root -p pandapickle < database/migration_add_match_preference.sql
+```
+(Enter your MySQL root password when prompted)
+
+**Option B - phpMyAdmin:**
+1. Open http://localhost/phpmyadmin
+2. Select "pandapickle" database
+3. Click "SQL" tab
+4. Open file: database/migration_add_match_preference.sql
+5. Copy all the SQL code
+6. Paste into phpMyAdmin SQL box
+7. Click "Go"
+
+### 2. Old Matches Without Game Numbers ⚠️
+**Check:** Open http://localhost/PandaPickle/check_game_number.php
+**Problem:** Matches created BEFORE migration won't have game numbers
+
+**Solution A - Delete Old Matches:**
+```sql
+DELETE FROM open_play_matches;
+```
+Then generate new matches (which will have game numbers)
+
+**Solution B - Update Old Matches Manually:**
+```sql
+-- Add game numbers to existing matches (sequential order)
+SET @row_number = 0;
+UPDATE open_play_matches 
+SET game_number = (@row_number:=@row_number + 1)
+ORDER BY id;
+```
+
+### 3. No Matches Generated Yet 🎯
+**Check:** Look at "Generated Matches" section - is it empty?
+**Solution:** 
+1. Go to admin panel
+2. Make sure registrations are approved
+3. Click "Generate Matches" button
+4. Matches will be created WITH game numbers
+5. Friend Groups Schedule will now show game numbers!
+
+### 4. Friend Groups Have No Approved Teams 📝
+**Check:** Look at Registrations table
+**Problem:** Friend group teams are still "pending" status
+**Solution:**
+1. Find friend group registrations
+2. Mark payment as "paid"
+3. Click "Approve" button
+4. Then generate matches
+
+## STEP-BY-STEP VERIFICATION
+
+**Step 1: Check Migration**
+```
+Visit: http://localhost/PandaPickle/check_game_number.php
+Look for: ✅ game_number column EXISTS!
+```
+
+**Step 2: Check Registrations**
+```
+Admin Panel → Registrations table
+Look for: Friend group teams with "approved" status
+```
+
+**Step 3: Generate Matches**
+```
+Admin Panel → All Sessions table
+Click: "Generate Matches" button
+```
+
+**Step 4: Verify Game Numbers**
+```
+Check 1: Generated Matches table → Should show "Game 1", "Game 2", etc.
+Check 2: Friend Groups Schedule → Should show "Game 1-2" or similar
+```
+
+## QUICK FIX CHECKLIST
+
+□ Run migration: migration_add_match_preference.sql
+□ Delete old matches (if any exist without game_number)
+□ Approve friend group registrations
+□ Click "Generate Matches"
+□ Refresh page and check Friend Groups Schedule
+
+## EXAMPLE WORKING STATE
+
+After everything is set up correctly, you should see:
+
+**Friend Groups Schedule:**
+┌──────────────────────────────────────────────────────┐
+│ Group Name      │ Teams │ Game Numbers │ Matches    │
+├──────────────────────────────────────────────────────┤
+│ 👥 Birthday     │ 4     │ Game 1-2     │ 2 matches  │
+│    Party        │ teams │              │            │
+└──────────────────────────────────────────────────────┘
+
+**Generated Matches:**
+┌──────────────────────────────────────────────────────┐
+│ Round │ Game # │ Match                  │ Status    │
+├──────────────────────────────────────────────────────┤
+│ 1     │ Game 1 │ John & Jane vs Mike    │ Pending   │
+│ 1     │ Game 2 │ Tom & Lisa vs Bob      │ Pending   │
+└──────────────────────────────────────────────────────┘
+
+## STILL NOT WORKING?
+
+Run this diagnostic query in phpMyAdmin:
+```sql
+-- Check if friend groups are in matches
+SELECT 
+    r.friend_group,
+    COUNT(DISTINCT r.id) as team_count,
+    COUNT(DISTINCT m.id) as match_count,
+    MIN(m.game_number) as first_game,
+    MAX(m.game_number) as last_game
+FROM open_play_registrations r
+LEFT JOIN open_play_matches m ON (
+    m.player1_reg_id = r.id OR 
+    m.player2_reg_id = r.id OR 
+    m.player3_reg_id = r.id OR 
+    m.player4_reg_id = r.id
+)
+WHERE r.match_preference = 'friends'
+AND r.friend_group IS NOT NULL
+GROUP BY r.friend_group;
+```
+
+If `first_game` and `last_game` are NULL, it means:
+- Matches haven't been generated yet, OR
+- The migration wasn't applied
+
+=========================================================

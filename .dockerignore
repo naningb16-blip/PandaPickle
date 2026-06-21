@@ -1,0 +1,10 @@
+.git
+.gitignore
+*.md
+docker-compose.yml
+Dockerfile
+.dockerignore
+*.txt
+test_*.php
+check_*.php
+debug_*.php

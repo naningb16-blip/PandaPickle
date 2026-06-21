@@ -1,0 +1,159 @@
+OPEN PLAY SYSTEM - COMPLETE GUIDE
+==================================
+
+DATABASE UPDATE REQUIRED:
+-------------------------
+Run this SQL migration to update open play system:
+
+    mysql -u your_username -p pandapickle < database/migration_open_play_updates.sql
+
+This will:
+- Remove "number_of_players" column
+- Add "play_type" column (singles/doubles)
+- Add "payment_method" column (cash/cashless)
+- Create "open_play_matches" table for match generation
+
+HOW THE OPEN PLAY SYSTEM WORKS:
+--------------------------------
+
+ADMIN SIDE:
+-----------
+1. CREATE SESSION:
+   - Set title, date, start/end time
+   - Set max players (e.g., 20)
+   - Set fee per player (e.g., PHP 50)
+   - System creates active session
+
+2. MANAGE REGISTRATIONS:
+   - View all registrations with:
+     * Player name
+     * Play type (Singles or Doubles)
+     * Payment method (Cash or Cashless)
+     * Payment status (dropdown to update)
+     * Registration status
+   - Update payment status from "unpaid" to "paid"
+   - Approve registration (only if payment is "paid")
+   - Reject registration anytime
+
+3. GENERATE MATCHES:
+   - Click "Generate Matches" button for a session
+   - System automatically creates random matches:
+     * Singles players → paired (1v1)
+     * Doubles players → grouped in fours (2v2)
+   - Each player plays ONE game per round
+   - Players who already played are excluded from current round
+
+4. ROUNDS:
+   - Round 1: Initial random matching
+   - Round 2+: Click "Generate Matches" again
+   - System automatically creates NEW random matches
+   - Only players who finished previous round are matched
+
+CUSTOMER SIDE:
+--------------
+1. VIEW AVAILABLE SESSIONS:
+   - See active sessions
+   - Check available slots
+   - View date, time, fee
+
+2. REGISTER FOR SESSION:
+   - Select Play Type:
+     * Singles (1v1 matches)
+     * Doubles (2v2 matches, groups of 4)
+   - Select Payment Method:
+     * Cash (pay on arrival)
+     * Cashless (GCash/Bank Transfer)
+   - Submit registration
+
+3. WAIT FOR APPROVAL:
+   - Payment status starts as "unpaid"
+   - Make payment (cash/cashless)
+   - Admin verifies and updates to "paid"
+   - Admin approves registration
+   - Status changes to "approved"
+
+4. VIEW REGISTRATIONS:
+   - See all your registrations
+   - Check play type, payment method
+   - Monitor payment status and registration status
+
+MATCHING SYSTEM:
+----------------
+1. INITIAL MATCHING (Round 1):
+   - Admin clicks "Generate Matches"
+   - System gets all APPROVED players
+   - SINGLES players: Randomly paired (2 per match)
+   - DOUBLES players: Randomly grouped (4 per match)
+   - Matches created with status "pending"
+
+2. SUBSEQUENT ROUNDS (Round 2+):
+   - When current round finishes, admin clicks "Generate Matches" again
+   - System excludes players who completed previous round
+   - Creates NEW random matches for remaining/available players
+   - Continues until session ends
+
+MATCH RULES:
+------------
+- Singles Match: 2 players (1v1)
+- Doubles Match: 4 players (2v2)
+- One game per player per round
+- Random matching each round
+- Players must be "approved" to be matched
+- If odd number of singles players, one sits out
+- If doubles players < 4, they wait for next round
+
+EXAMPLE FLOW:
+-------------
+SESSION: Friday Night Open Play
+- Max Players: 20
+- Fee: PHP 50
+
+REGISTRATIONS:
+- 10 players register for Singles
+- 8 players register for Doubles
+- All select payment method
+- All payments marked as "paid" by admin
+- All registrations approved by admin
+
+ROUND 1 MATCHING:
+- Admin clicks "Generate Matches"
+- 5 Singles matches created (10 players / 2)
+- 2 Doubles matches created (8 players / 4)
+- Total: 7 matches
+
+ROUND 2 MATCHING:
+- Matches from Round 1 completed
+- Admin clicks "Generate Matches" again
+- System creates NEW random matches
+- Different pairings from Round 1
+
+IMPORTANT NOTES:
+----------------
+- Payment verification same as exclusive reservations
+- Admin MUST mark payment as "paid" before approving
+- Each registration = 1 player (not multiple)
+- Matching is AUTOMATIC and RANDOM
+- Matches are per-round basis
+- System tracks who played to avoid duplicates in same round
+- Admin manages when to generate matches (manual trigger)
+
+PAYMENT FLOW:
+-------------
+Customer registers → Payment status: "unpaid"
+Customer pays (cash/cashless)
+Admin verifies payment received
+Admin updates dropdown to "paid"
+Admin clicks "Approve"
+Registration status: "approved"
+Player is now eligible for matching
+
+TECHNICAL DETAILS:
+------------------
+- play_type: 'singles' or 'doubles'
+- payment_method: 'cash' or 'cashless'
+- Matches stored in open_play_matches table
+- match_round tracks which round
+- match_type tracks singles vs doubles
+- player1_id, player2_id always filled
+- player3_id, player4_id only for doubles
+- match_status: pending, playing, completed

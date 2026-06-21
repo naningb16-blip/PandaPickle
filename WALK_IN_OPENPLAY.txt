@@ -1,0 +1,184 @@
+WALK-IN OPEN PLAY REGISTRATION
+==============================
+
+Date: June 20, 2026
+
+FEATURE OVERVIEW:
+-----------------
+
+This feature allows admins to register walk-in players for open play sessions who don't have an account in the system.
+
+KEY FEATURES:
+-------------
+
+1. Team Registration
+   - Admin can enter player name and partner name
+   - Requires contact phone number
+   - No user account required
+   - Walk-in registrations are marked with "walk-in" badge
+
+2. Automatic Approval & Payment
+   - Walk-in registrations are automatically approved
+   - Payment status is automatically set to "paid"
+   - No need for customer approval workflow
+   - Ready to play immediately
+
+3. Session Availability Check
+   - Form shows only active upcoming sessions
+   - Displays available spots remaining
+   - Prevents registration if session is full
+   - Same validation as online registrations
+
+4. Smart Session Selection
+   - Dropdown shows only future sessions
+   - Shows number of available spots
+   - Disables full sessions
+
+DATABASE CHANGES:
+-----------------
+
+1. Updated database/schema.sql
+   - Made user_id nullable (allows NULL for walk-in players)
+   - Added contact_phone VARCHAR(20) column
+   - Changed foreign key to SET NULL on user delete
+
+2. Created database/migration_add_walkin_openplay.sql
+   - Migration script for existing databases
+   - Modifies user_id to nullable
+   - Adds contact_phone column
+   - Updates foreign key constraint
+
+CODE CHANGES:
+-------------
+
+1. admin/open-play.php
+
+   a) Added active sessions query at the top
+      - Fetches only active sessions with future dates
+      - Calculates available spots
+      - Used in walk-in registration form dropdown
+
+   b) Added walk-in registration handler (create_walkin)
+      - Validates player name, partner name, contact phone
+      - Checks session availability
+      - Creates registration with user_id = NULL
+      - Sets status to "approved" automatically
+      - Creates payment record as "paid"
+      - Shows success message
+
+   c) Updated registrations query
+      - Uses COALESCE to show user_name OR fullname
+      - Uses COALESCE to show contact_phone OR phone
+      - Adds booking_type column (walk-in vs online)
+      - LEFT JOIN users (since user_id can be NULL)
+
+   d) Added walk-in registration form
+      - Session dropdown with availability
+      - Player name and partner name fields
+      - Contact phone field (required)
+      - Payment method selection
+      - Auto-approval notice
+
+   e) Updated registrations table
+      - Added "Type" column (walk-in/online badge)
+      - Changed to show team players (both names)
+      - Changed to show contact info (phone + email)
+      - Better layout for walk-in vs online bookings
+
+HOW TO USE (ADMIN):
+-------------------
+
+1. Navigate to Admin → Open Play Sessions
+2. Scroll to "Walk-in Player Registration" form
+3. Fill out the form:
+   - Select session (only shows sessions with spots available)
+   - Enter player name (required)
+   - Enter partner name (required)
+   - Enter contact phone (required)
+   - Choose payment method
+
+4. Click "Register Walk-in Team (Auto-Approved & Paid)"
+5. Registration is created with:
+   - Status: Approved
+   - Payment Status: Paid
+   - Booking Type: Walk-in
+   - Ready for match generation
+
+REGISTRATIONS TABLE:
+--------------------
+
+The table now shows:
+- Session: Session title
+- Type: "walk-in" (blue badge) or "online" (gray badge)
+- Team Players: Player name & Partner name
+- Contact: Phone, email (if online booking)
+- Payment Method, Total, Payment Status, Registration Status
+- Actions (for pending online registrations)
+
+HOW TO APPLY:
+-------------
+
+1. Run the migration SQL:
+   mysql -u root -p pandapickle < database/migration_add_walkin_openplay.sql
+
+2. The code changes are already applied to:
+   - database/schema.sql
+   - admin/open-play.php
+
+3. Test the following:
+   - Create a walk-in registration
+   - Verify it appears with "walk-in" badge
+   - Check that team names and phone display correctly
+   - Verify online registrations still work normally
+   - Try generating matches with walk-in players
+
+MATCH GENERATION:
+-----------------
+
+IMPORTANT: The current match generation system uses user_id to create matches.
+For walk-in players (user_id = NULL), the match generation will need to be updated
+in a future enhancement to handle NULL user_ids or create temporary player records.
+
+Current behavior:
+- Walk-in registrations have user_id = NULL
+- Match generation query filters by user_id
+- Walk-in players won't be included in automated match generation
+- Workaround: Admin can manually create matches or assign temporary accounts
+
+NOTES:
+------
+
+- Walk-in registrations bypass the approval workflow
+- They are created directly in "approved" status
+- Payment is marked as "paid" by default
+- Admin is responsible for collecting payment before registering
+- Walk-in players don't have user accounts
+- System distinguishes between walk-in and online bookings
+- Contact phone is stored for walk-in communication
+- If a walk-in player later creates an account, their old registrations won't be linked
+
+FUTURE ENHANCEMENTS:
+--------------------
+
+1. Update match generation to support walk-in players (user_id = NULL)
+2. Add ability to convert walk-in registration to user account
+3. Add SMS notification for walk-in players using contact_phone
+4. Create player check-in system for walk-ins
+5. Allow walk-in players to be added to player pool without user_id
+
+COMPARISON:
+-----------
+
+Walk-in Registration:
+✓ No account needed
+✓ Admin registers on behalf of player
+✓ Auto-approved and paid
+✓ Contact phone for communication
+✓ Quick registration at the venue
+
+Online Registration:
+✓ Requires user account
+✓ User registers themselves
+✓ Requires admin approval
+✓ Requires payment confirmation
+✓ Full account features (history, profile)

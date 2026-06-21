@@ -1,0 +1,163 @@
+WALK-IN PLAYERS AND MATCH GENERATION
+=====================================
+
+Date: June 20, 2026
+
+ISSUE FIXED:
+------------
+
+Error: "Column 'player2_id' cannot be null" when generating matches after walk-in players were added.
+
+ROOT CAUSE:
+-----------
+
+The match generation system requires user_id values to create matches (stored in player1_id, player2_id, etc).
+Walk-in players have user_id = NULL (since they don't have accounts), which caused the error.
+
+SOLUTION IMPLEMENTED:
+---------------------
+
+Updated the match generation query in admin/open-play.php:
+
+BEFORE:
+  SELECT reg.user_id FROM open_play_registrations reg
+  WHERE reg.session_id = ? AND reg.status = 'approved'
+
+AFTER:
+  SELECT reg.user_id FROM open_play_registrations reg
+  WHERE reg.session_id = ? AND reg.status = 'approved'
+  AND reg.user_id IS NOT NULL  ← NEW: Excludes walk-in players
+
+CURRENT BEHAVIOR:
+-----------------
+
+Automatic Match Generation:
+✓ Only includes players with accounts (online registrations)
+✓ Walk-in players are excluded from automatic matching
+✓ Error message updated to explain this limitation
+
+Walk-in Player Management:
+✓ Walk-in players can still register
+✓ Walk-in players appear in registrations list
+✓ Walk-in players are marked as "approved" and "paid"
+✗ Walk-in players NOT included in auto-generated matches
+
+WORKAROUNDS FOR WALK-IN PLAYERS:
+---------------------------------
+
+Option 1: Manual Match Organization (Current)
+- Admin organizes matches manually at the venue
+- Walk-in players participate but aren't in the system matches
+- Simple for small groups
+
+Option 2: Create Temporary Accounts (Recommended)
+- Create simple user accounts for walk-in players
+- Use their phone number as username/email
+- Password: "walkin123" or similar
+- Then register them as regular users
+- They can be included in match generation
+
+Option 3: Hybrid Approach
+- Generate matches for online players
+- Manually add walk-in players to existing matches
+- Requires modifying the matches table directly
+
+FUTURE ENHANCEMENTS:
+--------------------
+
+To fully support walk-in players in match generation, we would need to:
+
+1. Create a "players" table separate from "users"
+   - Store player info (name, contact) without requiring login
+   - Link registrations to players, not users
+   - Matches reference players, not user_ids
+
+2. Or: Auto-create temporary user accounts for walk-ins
+   - Generate temp accounts when walk-in is registered
+   - Email: walkin_[phone]@temp.local
+   - Password: random generated
+   - Flag as temp account
+   - Can be "upgraded" to full account later
+
+3. Or: Modify matches table to support NULL user_ids
+   - Add player_name fields as fallback
+   - Show name from users table OR registration table
+   - More complex but preserves current structure
+
+RECOMMENDED WORKFLOW (CURRENT SYSTEM):
+---------------------------------------
+
+For Sessions with Walk-in Players:
+
+1. Online players register through the website
+2. Walk-in players registered by admin at venue
+3. Admin clicks "Generate Matches" for online players
+4. Admin manually organizes walk-in players into matches
+5. Admin can update match table manually if needed
+
+Example SQL to manually add walk-in to a match:
+(Not recommended unless you know what you're doing)
+
+-- Find the walk-in registration
+SELECT id, user_name, partner_name FROM open_play_registrations WHERE user_id IS NULL;
+
+-- This won't work as-is because matches need user_id
+-- You'd need to create a temporary user first
+
+FILES MODIFIED:
+---------------
+
+admin/open-play.php
+- Added "AND reg.user_id IS NOT NULL" to match generation query
+- Updated error message to mention walk-in limitation
+- Added note below sessions table
+
+TESTING:
+--------
+
+Test Scenario 1: Only Online Players
+1. Create session
+2. Have users register online
+3. Generate matches
+✓ Should work normally
+
+Test Scenario 2: Mix of Online and Walk-in
+1. Create session
+2. Have users register online
+3. Register walk-in players
+4. Generate matches
+✓ Should create matches for online players only
+✓ Should show clear message about walk-ins
+
+Test Scenario 3: Only Walk-in Players
+1. Create session
+2. Register only walk-in players
+3. Try to generate matches
+✓ Should show error: "Not enough players with accounts"
+
+NOTES:
+------
+
+- This is a known limitation of the current system design
+- Walk-in feature prioritizes quick registration over full integration
+- For venues with many walk-ins, consider creating simple accounts
+- Match generation still works perfectly for online registrations
+- The limitation only affects automatic match generation, not player participation
+
+CONTACT INFO STORED:
+--------------------
+
+Walk-in players have:
+✓ user_name (player name)
+✓ partner_name (partner's name)  
+✓ contact_phone (for communication)
+✓ All payment info
+
+They just don't have:
+✗ user_id (no account)
+✗ Login credentials
+✗ Email address
+✗ Full user profile
+
+This information is sufficient for venue management and payment tracking,
+but not for the automated match generation system.

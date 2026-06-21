@@ -1,0 +1,126 @@
+MATCH PREFERENCE FEATURE - IMPLEMENTATION GUIDE
+==============================================
+
+## OVERVIEW
+This feature allows players to choose between random matching or playing with friends.
+- Players who select "Random Match" will be randomly matched with other random players
+- Players who select "Play with Friends" enter a group name and are matched WITH THEIR FRIEND GROUP
+- ALL matches get sequential game numbers so admin knows the play order
+
+## HOW IT WORKS
+
+### 1. Registration (User & Walk-in)
+- Users and walk-ins can select:
+  * Random Match: Player will be randomly matched with other random players
+  * Play with Friends: Player enters friend group name (e.g., "Birthday Party", "Company Outing")
+    - Teams with SAME friend group name will be matched together
+
+### 2. Match Generation (Admin)
+- When admin clicks "Generate Matches":
+  * Step 1: Friend groups are matched FIRST
+    - Teams with same group name play against each other
+    - Example: "Birthday Party" teams only play other "Birthday Party" teams
+  * Step 2: Random teams are matched
+    - Remaining teams and odd teams from friend groups are randomly paired
+  * Step 3: All matches get sequential game numbers (Game 1, 2, 3, 4, etc.)
+
+### 3. Game Numbers
+- Every match gets a game number showing play order
+- Friend group matches get earlier game numbers
+- Random matches get later game numbers
+- Admin can see which teams play next
+
+## DATABASE CHANGES
+
+New columns in `open_play_registrations`:
+- `match_preference` ENUM('random', 'friends') DEFAULT 'random'
+- `friend_group` VARCHAR(100) DEFAULT NULL
+
+New column in `open_play_matches`:
+- `game_number` INT DEFAULT NULL (shows play order: Game 1, Game 2, etc.)
+
+## MIGRATION STEPS
+
+1. Run the migration SQL:
+   ```
+   mysql -u root -p pandapickle < database/migration_add_match_preference.sql
+   ```
+
+   Or execute in phpMyAdmin:
+   - Open database/migration_add_match_preference.sql
+   - Copy and run the SQL commands
+
+2. The migration adds:
+   - match_preference column to registrations
+   - friend_group column to registrations
+   - game_number column to matches
+
+## USER INTERFACE
+
+### User Registration Form (open-play.php)
+- Radio buttons: Random Match / Play with Friends
+- Friend group text field appears when "Play with Friends" is selected
+- JavaScript shows/hides the friend group input dynamically
+- Same group name = will be matched together
+
+### Admin Walk-in Form (admin/open-play.php)
+- Same radio buttons and friend group field as user form
+- Admin can register walk-in players with either preference
+
+### Generated Matches Table (admin/open-play.php)
+- Shows: Session | Round | Game # | Match | Status | Actions
+- Game # column displays game number (Game 1, Game 2, etc.)
+- Ordered by game number for easy tracking of play order
+
+## EXAMPLES
+
+### Scenario 1: All Random Players
+- 8 teams register with "Random Match"
+- Admin generates matches → 4 matches created (Game 1, 2, 3, 4)
+- All teams randomly paired
+
+### Scenario 2: Mixed Preferences
+- 4 teams select "Play with Friends" (friend group: "Birthday Party")
+- 6 teams select "Random Match"
+- Admin generates matches:
+  * Game 1, 2: Birthday Party teams play each other (2 matches)
+  * Game 3, 4, 5: Random teams play each other (3 matches)
+  * Total: 5 matches with sequential game numbers
+
+### Scenario 3: Multiple Friend Groups
+- 4 teams: "Birthday Party" group
+- 4 teams: "Company Outing" group
+- 4 teams: "Random Match"
+- Admin generates matches:
+  * Game 1, 2: Birthday Party vs Birthday Party
+  * Game 3, 4: Company Outing vs Company Outing
+  * Game 5, 6: Random teams
+  * Total: 6 matches
+
+### Scenario 4: Odd Friend Group
+- 3 teams: "Birthday Party" group
+- 5 teams: "Random Match"
+- Admin generates matches:
+  * Game 1: Birthday Party vs Birthday Party (2 teams matched)
+  * Game 2, 3, 4: Random teams + 1 odd Birthday Party team (4 matches total)
+  * The odd Birthday Party team joins the random pool
+
+## ADMIN NOTES
+
+- Friend groups are matched FIRST, get lower game numbers
+- Random teams matched SECOND, get higher game numbers
+- Game numbers show play order (Game 1 plays first, then Game 2, etc.)
+- Teams in same friend group ONLY play against each other
+- Odd teams from friend groups join the random pool
+- All registrations visible in admin panel with their preference shown
+
+## KEY BENEFITS
+
+✅ Friend groups stay together - no mixing with strangers
+✅ Random players get matched fairly
+✅ Game numbers help admin organize court scheduling
+✅ Clear play order for all teams
+✅ Flexible for events (birthdays, company outings, tournaments)
+
+==============================================
+Generated: June 20, 2026

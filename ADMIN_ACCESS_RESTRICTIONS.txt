@@ -1,0 +1,115 @@
+ADMIN ACCESS RESTRICTIONS
+=========================
+
+Date: June 20, 2026
+
+CHANGES MADE:
+-------------
+
+Separated admin and customer interfaces to prevent confusion and ensure admins use the proper management tools.
+
+1. NAVIGATION MENU CHANGES (includes/header.php)
+   - "Reservations" link - HIDDEN from admins
+   - "Open Play" link - HIDDEN from admins
+   - Admins now see: Home, About, Contact, Dashboard, Admin, Profile, Logout
+   - Customers see: Home, About, Contact, Dashboard, Reservations, Open Play, Profile, Logout
+
+2. PAGE ACCESS RESTRICTIONS
+   
+   a) reservations.php
+      - Added admin check at the top of the page
+      - If admin tries to access, they are redirected to admin/reservations.php
+      - Shows error message: "Admins should use the Admin panel to manage reservations."
+   
+   b) open-play.php
+      - Added admin check at the top of the page
+      - If admin tries to access, they are redirected to admin/open-play.php
+      - Shows error message: "Admins should use the Admin panel to manage open play sessions."
+
+RATIONALE:
+----------
+
+1. Clear Separation of Roles
+   - Customer pages: For end-users to make their own bookings
+   - Admin pages: For managing all bookings, approvals, and payments
+
+2. Prevent Confusion
+   - Admins shouldn't create reservations as customers
+   - Admins use the admin panel with additional features:
+     * Walk-in reservations
+     * Approval workflows
+     * Payment management
+     * Full visibility of all bookings
+
+3. Better UX
+   - Cleaner navigation menu for admins
+   - Direct access to management tools
+   - No duplicate functionality
+
+ADMIN CAPABILITIES:
+-------------------
+
+Admins can now:
+✓ Create walk-in reservations for customers without accounts
+✓ View all customer reservations
+✓ Approve/reject reservation requests
+✓ Manage payment status
+✓ Create and manage open play sessions
+✓ Approve open play registrations
+✓ Generate matches for open play
+
+Admins cannot:
+✗ Access customer booking pages (reservations.php, open-play.php)
+✗ Create reservations as if they were customers
+
+CUSTOMER CAPABILITIES:
+----------------------
+
+Customers can:
+✓ Create their own court reservations
+✓ Register for open play sessions
+✓ View their booking history
+✓ Track payment status
+
+Customers cannot:
+✗ Access admin panel
+✗ View other customers' bookings
+✗ Approve/reject reservations
+✗ Create walk-in reservations
+
+FILES MODIFIED:
+---------------
+
+1. includes/header.php
+   - Wrapped "Reservations" and "Open Play" links in <?php if (!isAdmin()): ?> check
+
+2. reservations.php
+   - Added admin redirect at the top (after requireLogin())
+
+3. open-play.php
+   - Added admin redirect at the top (after requireLogin())
+
+TESTING:
+--------
+
+Test as Admin:
+1. Login as admin
+2. Check navigation menu - should NOT see "Reservations" or "Open Play"
+3. Try accessing http://localhost/PandaPickle/reservations.php
+   - Should redirect to admin/reservations.php
+4. Try accessing http://localhost/PandaPickle/open-play.php
+   - Should redirect to admin/open-play.php
+
+Test as Customer:
+1. Login as regular customer
+2. Check navigation menu - SHOULD see "Reservations" and "Open Play"
+3. Should be able to access both pages normally
+4. Should NOT see "Admin" link in menu
+
+NOTES:
+------
+
+- This separation improves security and user experience
+- Admins have more powerful tools in the admin panel
+- Customers have a simpler, focused booking experience
+- No functionality was removed, just reorganized by role

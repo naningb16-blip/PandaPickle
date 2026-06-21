@@ -1,0 +1,366 @@
+🔒 SECURITY FLOW DIAGRAMS
+==========================
+
+## 1. PASSWORD SECURITY FLOW
+
+REGISTRATION:
+┌─────────────┐
+│ User enters │
+│ password    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ password_hash()         │
+│ → bcrypt algorithm      │
+│ → automatic salt        │
+│ → $2y$10$...64chars     │
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Store hash in database  │
+│ (NOT plain password!)   │
+└─────────────────────────┘
+
+LOGIN:
+┌─────────────┐
+│ User enters │
+│ password    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Get hash from database  │
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ password_verify()       │
+│ Compare input vs hash   │
+└──────┬──────────────────┘
+       │
+   ┌───┴───┐
+   │ Match?│
+   └───┬───┘
+       │
+   ┌───┴───────────┐
+   │ YES       NO  │
+   ▼               ▼
+┌─────┐      ┌────────┐
+│Login│      │ Error: │
+│ ✅  │      │Invalid │
+└─────┘      └────────┘
+
+
+## 2. DUPLICATE EMAIL PREVENTION
+
+USER REGISTRATION:
+┌─────────────────┐
+│ User submits    │
+│ registration    │
+│ form            │
+└────────┬────────┘
+         │
+         ▼
+┌────────────────────────┐
+│ Validate input         │
+│ - Email format         │
+│ - Password length      │
+│ - Required fields      │
+└────────┬───────────────┘
+         │
+         ▼
+┌────────────────────────┐
+│ Try INSERT INTO users  │
+└────────┬───────────────┘
+         │
+    ┌────┴─────┐
+    │ Success? │
+    └────┬─────┘
+         │
+    ┌────┴──────────────┐
+    │ YES          NO   │
+    ▼                   ▼
+┌────────┐    ┌──────────────────┐
+│Account │    │ PDO Exception    │
+│created │    │ Code = 23000?    │
+│   ✅   │    └────────┬─────────┘
+└────────┘             │
+              ┌────────┴──────────┐
+              │ YES          NO   │
+              ▼                   ▼
+    ┌──────────────────┐  ┌────────────┐
+    │ "Email already   │  │ Other DB   │
+    │  registered" ❌  │  │ error ❌   │
+    └──────────────────┘  └────────────┘
+
+
+## 3. DUPLICATE RESERVATION PREVENTION
+
+CREATE RESERVATION:
+┌─────────────────┐
+│ User submits    │
+│ reservation     │
+└────────┬────────┘
+         │
+         ▼
+┌──────────────────────────────┐
+│ Validate input               │
+│ - Court, date, time, hours   │
+│ - Operating hours check      │
+│ - Court overlap check        │
+└────────┬─────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────┐
+│ 🔒 NEW: Check for duplicate              │
+│ SELECT COUNT(*) FROM reservations        │
+│ WHERE user_id = ?                        │
+│   AND court_id = ?                       │
+│   AND reservation_date = ?               │
+│   AND start_time = ?                     │
+│   AND status IN ('pending','approved')   │
+│   AND created_at > (NOW() - 5 minutes)   │
+└────────┬─────────────────────────────────┘
+         │
+    ┌────┴──────┐
+    │ Count > 0?│
+    └────┬──────┘
+         │
+    ┌────┴──────────────────┐
+    │ YES              NO   │
+    ▼                       ▼
+┌──────────────┐    ┌────────────────┐
+│ Show error:  │    │ BEGIN          │
+│ "Already     │    │ TRANSACTION    │
+│  have        │    └────────┬───────┘
+│  reservation"│             │
+│      ❌      │             ▼
+└──────────────┘    ┌────────────────┐
+                    │ INSERT         │
+                    │ reservation    │
+                    └────────┬───────┘
+                             │
+                             ▼
+                    ┌────────────────┐
+                    │ INSERT payment │
+                    └────────┬───────┘
+                             │
+                        ┌────┴────┐
+                        │Success? │
+                        └────┬────┘
+                             │
+                    ┌────────┴──────────┐
+                    │ YES          NO   │
+                    ▼                   ▼
+            ┌───────────┐    ┌──────────────┐
+            │ COMMIT    │    │ ROLLBACK     │
+            │ Success ✅│    │ Show error ❌│
+            └───────────┘    └──────────────┘
+
+
+## 4. DUPLICATE OPEN PLAY REGISTRATION
+
+REGISTER FOR SESSION:
+┌─────────────────┐
+│ User submits    │
+│ registration    │
+└────────┬────────┘
+         │
+         ▼
+┌──────────────────────────────┐
+│ Validate input               │
+│ - Session selection          │
+│ - Match preference           │
+│ - Player names               │
+└────────┬─────────────────────┘
+         │
+         ▼
+┌──────────────────────────────────────────┐
+│ 🔒 NEW: Check for duplicate              │
+│ SELECT COUNT(*) FROM registrations       │
+│ WHERE user_id = ?                        │
+│   AND session_id = ?                     │
+│   AND status IN ('pending','approved')   │
+│   AND created_at > (NOW() - 5 minutes)   │
+└────────┬─────────────────────────────────┘
+         │
+    ┌────┴──────┐
+    │ Count > 0?│
+    └────┬──────┘
+         │
+    ┌────┴──────────────────┐
+    │ YES              NO   │
+    ▼                       ▼
+┌──────────────┐    ┌────────────────┐
+│ Show error:  │    │ Check capacity │
+│ "Already     │    └────────┬───────┘
+│  registered" │             │
+│      ❌      │             ▼
+└──────────────┘    ┌────────────────┐
+                    │ BEGIN          │
+                    │ TRANSACTION    │
+                    └────────┬───────┘
+                             │
+                             ▼
+                    ┌────────────────┐
+                    │ INSERT team(s) │
+                    │ registration   │
+                    └────────┬───────┘
+                             │
+                             ▼
+                    ┌────────────────┐
+                    │ INSERT payment │
+                    └────────┬───────┘
+                             │
+                        ┌────┴────┐
+                        │Success? │
+                        └────┬────┘
+                             │
+                    ┌────────┴──────────┐
+                    │ YES          NO   │
+                    ▼                   ▼
+            ┌───────────┐    ┌──────────────┐
+            │ COMMIT    │    │ ROLLBACK     │
+            │ Success ✅│    │ Show error ❌│
+            └───────────┘    └──────────────┘
+
+
+## 5. TRANSACTION SAFETY (Race Condition Prevention)
+
+SCENARIO: Two users submit at exact same time
+
+WITHOUT TRANSACTION (❌ BAD):
+User A              User B              Database
+  │                   │                     │
+  ├─INSERT reservation─────────────────────►│
+  │                   │                     │ ✅ Created
+  │                   ├─INSERT payment─────►│
+  │                   │                     │ ❌ ERROR!
+  │                   │                     │
+Result: Orphaned reservation with no payment ❌
+
+
+WITH TRANSACTION (✅ GOOD):
+User A              User B              Database
+  │                   │                     │
+  ├─BEGIN TRANS───────────────────────────►│
+  ├─INSERT reservation─────────────────────►│
+  ├─INSERT payment────────────────────────►│ 
+  │                   │                     │ ❌ ERROR!
+  ├─ROLLBACK──────────────────────────────►│
+  │                   │                     │ ✅ Undone
+  │                   │                     │
+Result: Nothing created (clean state) ✅
+
+
+## 6. 5-MINUTE DUPLICATE PROTECTION
+
+Timeline showing double-click protection:
+
+TIME: 10:00:00
+┌──────────────────────────────────┐
+│ User submits reservation         │
+│ ✅ CREATED                       │
+└──────────────────────────────────┘
+
+TIME: 10:00:05 (5 seconds later)
+┌──────────────────────────────────┐
+│ User clicks Submit again         │
+│ ❌ BLOCKED (duplicate detected)  │
+│ Message: "Already have           │
+│          reservation"            │
+└──────────────────────────────────┘
+
+TIME: 10:05:01 (5 minutes + 1 second later)
+┌──────────────────────────────────┐
+│ User submits again               │
+│ ✅ ALLOWED (outside 5-min window)│
+│ (if they really want duplicate)  │
+└──────────────────────────────────┘
+
+
+## 7. OVERALL SECURITY ARCHITECTURE
+
+┌────────────────────────────────────────────┐
+│           USER INTERFACE                   │
+│  (Browser: HTML forms with validation)     │
+└─────────────────┬──────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────┐
+│         INPUT VALIDATION LAYER              │
+│ • Trim & sanitize input                     │
+│ • Validate email format                     │
+│ • Check password length                     │
+│ • Verify required fields                    │
+└─────────────────┬───────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────┐
+│       BUSINESS LOGIC LAYER                  │
+│ 🔒 Security Checks:                         │
+│ • Duplicate email check                     │
+│ • Duplicate reservation check               │
+│ • Duplicate registration check              │
+│ • Court availability check                  │
+│ • Operating hours validation                │
+└─────────────────┬───────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────┐
+│      DATABASE TRANSACTION LAYER             │
+│ • BEGIN TRANSACTION                         │
+│ • Execute multiple SQL statements           │
+│ • COMMIT on success / ROLLBACK on error     │
+│ • All-or-nothing guarantee                  │
+└─────────────────┬───────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────┐
+│         DATABASE LAYER (MySQL)              │
+│ • UNIQUE constraints (email)                │
+│ • Foreign key constraints                   │
+│ • Indexes for performance                   │
+│ • Prepared statements (SQL injection proof) │
+└─────────────────────────────────────────────┘
+
+
+## 8. SECURITY LAYERS
+
+Layer 1: CLIENT-SIDE
+├─ HTML5 validation (required, email, minlength)
+├─ JavaScript validation (optional)
+└─ User feedback
+
+Layer 2: SERVER-SIDE INPUT
+├─ PHP validation
+├─ Type casting (int, float)
+├─ Trim & sanitize
+└─ Filter functions
+
+Layer 3: BUSINESS RULES
+├─ Duplicate detection
+├─ Availability checks
+├─ Permission checks
+└─ Status validation
+
+Layer 4: DATABASE
+├─ Transactions
+├─ Prepared statements
+├─ UNIQUE constraints
+└─ Foreign keys
+
+Layer 5: OUTPUT
+├─ HTML escaping
+├─ XSS prevention
+└─ Safe error messages
+
+
+==========================
+All diagrams represent the
+CURRENT IMPLEMENTED state
+of PandaPickle v2.0
+==========================
+

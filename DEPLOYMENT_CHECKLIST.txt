@@ -1,0 +1,294 @@
+✅ PANDAPICKLE SECURITY UPDATE - DEPLOYMENT CHECKLIST
+====================================================
+
+Use this checklist to deploy the security updates to your server.
+
+## 📋 PRE-DEPLOYMENT CHECKLIST
+
+### Step 1: Verify Files Are Updated
+[ ] Check reservations.php has duplicate prevention code
+[ ] Check open-play.php has duplicate prevention code
+[ ] Verify transaction safety code exists (BEGIN/COMMIT/ROLLBACK)
+[ ] Confirm migration file exists: migration_add_security_indexes.sql
+
+**How to check**: Search for "DATE_SUB(NOW(), INTERVAL 5 MINUTE)" in files
+
+### Step 2: Backup Current Database
+[ ] Export current database via phpMyAdmin
+[ ] Save backup file with date: pandapickle_backup_2026-06-20.sql
+[ ] Store backup in safe location
+
+**Command**:
+```bash
+mysqldump -u root -p pandapickle > pandapickle_backup_$(date +%Y%m%d).sql
+```
+
+### Step 3: Test Locally First
+[ ] Run test script: http://localhost/PandaPickle/test_security.php
+[ ] Verify all tests pass (especially password hashing)
+[ ] Test duplicate reservation manually
+[ ] Test duplicate registration manually
+[ ] Test normal operations still work
+
+## 🗄️ DATABASE MIGRATION
+
+### Step 4: Apply Security Indexes
+
+**Choose ONE method:**
+
+### Method A: MySQL Command Line (Recommended)
+[ ] Open terminal/command prompt
+[ ] Navigate to project folder:
+    cd C:\xampp\htdocs\PandaPickle
+[ ] Run migration:
+    mysql -u root -p pandapickle < database/migration_add_security_indexes.sql
+[ ] Verify success (no error messages)
+
+### Method B: phpMyAdmin (Easier)
+[ ] Open phpMyAdmin: http://localhost/phpmyadmin
+[ ] Select database: pandapickle
+[ ] Click "SQL" tab
+[ ] Open file: database/migration_add_security_indexes.sql
+[ ] Copy ALL content
+[ ] Paste in SQL window
+[ ] Click "Go" button
+[ ] Verify: "9 rows affected" or similar success message
+
+### Method C: XAMPP Shell
+[ ] Open XAMPP Control Panel
+[ ] Click "Shell" button
+[ ] Run commands:
+    mysql -u root -p
+    use pandapickle;
+    source C:/xampp/htdocs/PandaPickle/database/migration_add_security_indexes.sql;
+    exit;
+
+### Step 5: Verify Indexes Were Created
+[ ] Open phpMyAdmin
+[ ] Select database: pandapickle
+[ ] Click table: exclusive_reservations
+[ ] Click "Structure" tab
+[ ] Click "Indexes" section
+[ ] Verify these indexes exist:
+    - idx_user_court_date_time
+    - idx_reservations_created
+    - idx_reservation_date_status
+[ ] Repeat for open_play_registrations table:
+    - idx_user_session_status
+    - idx_registrations_created
+    - idx_session_status_preference
+[ ] Repeat for payments table:
+    - idx_payments_registration
+    - idx_payments_reservation
+
+## 🧪 LOCAL TESTING
+
+### Step 6: Test All Security Features
+
+### Test A: Password Hashing
+[ ] Register new test user: test_security@example.com
+[ ] Check database: SELECT password FROM users WHERE email = 'test_security@example.com';
+[ ] Password should start with: $2y$
+[ ] Try to login with correct password: ✅ Should work
+[ ] Try to login with wrong password: ❌ Should fail
+[ ] Delete test user
+
+### Test B: Duplicate Email Prevention
+[ ] Register user: duplicate_test@example.com
+[ ] Try to register same email again
+[ ] Should show error: "Email is already registered"
+[ ] Check database: Only 1 user with this email exists
+[ ] Delete test user
+
+### Test C: Duplicate Reservation Prevention
+[ ] Login as customer
+[ ] Create reservation: Court 1, Tomorrow, 10:00 AM, 2 hours
+[ ] Note reservation ID in database
+[ ] Refresh page and submit EXACT same reservation
+[ ] Should show error: "You already have a reservation..."
+[ ] Check database: Only 1 reservation created (verify ID)
+[ ] Delete test reservation
+
+### Test D: Duplicate Registration Prevention
+[ ] Login as customer
+[ ] Register for open play session (random match)
+[ ] Note registration ID in database
+[ ] Go back and try to register for same session again
+[ ] Should show error: "You are already registered for this session"
+[ ] Check database: Only 1 registration created (verify ID)
+[ ] Delete test registration
+
+### Test E: Transaction Safety
+[ ] Create reservation with payment
+[ ] Check database: Both reservation AND payment record exist
+[ ] Try to create reservation but cancel midway (close browser)
+[ ] Check database: No orphaned records
+[ ] All records are complete or don't exist
+
+### Test F: Normal Operations Still Work
+[ ] Create court reservation → Should work ✅
+[ ] Cancel reservation → Should work ✅
+[ ] Register for open play → Should work ✅
+[ ] Register with friends (4 players) → Should work ✅
+[ ] Admin approve registration → Should work ✅
+[ ] Generate matches → Should work ✅
+[ ] Mark match as finished → Should work ✅
+
+## 🚀 PRODUCTION DEPLOYMENT
+
+### Step 7: Upload Files to InfinityFree (or your hosting)
+
+### Files to Upload:
+[ ] reservations.php
+[ ] open-play.php
+[ ] All documentation files (optional):
+    - SECURITY_FEATURES.md
+    - SECURITY_UPDATE_SUMMARY.txt
+    - SECURITY_QUICK_REFERENCE.txt
+    - SECURITY_FLOW_DIAGRAM.txt
+    - SECURITY_UPDATE_README.md
+    - DEPLOYMENT_CHECKLIST.txt (this file)
+
+### Files to NOT Upload:
+[ ] Do NOT upload: test_security.php (delete or skip)
+[ ] Do NOT upload: Any backup files
+
+### Step 8: Update Production Database
+
+**Option A: Run Migration via phpMyAdmin**
+[ ] Login to hosting control panel
+[ ] Open phpMyAdmin
+[ ] Select your database
+[ ] Go to SQL tab
+[ ] Copy content of: migration_add_security_indexes.sql
+[ ] Paste and execute
+[ ] Verify success message
+
+**Option B: Run Migration via SSH (if available)**
+[ ] SSH into server
+[ ] Navigate to project directory
+[ ] Run: mysql -u youruser -p yourdatabase < database/migration_add_security_indexes.sql
+
+### Step 9: Update Database Configuration
+[ ] Open config/db.php
+[ ] Verify database credentials:
+    DB_HOST → Your InfinityFree MySQL host
+    DB_NAME → Your database name  
+    DB_USER → Your database username
+    DB_PASS → Your database password
+[ ] Save file
+[ ] Upload to server
+
+## ✅ POST-DEPLOYMENT VERIFICATION
+
+### Step 10: Test Live Site
+
+### Basic Functionality:
+[ ] Visit your live site
+[ ] Try to register new user
+[ ] Try to login
+[ ] Try to create reservation
+[ ] Try to register for open play
+
+### Security Tests:
+[ ] Try to register with existing email → Should fail ✅
+[ ] Create reservation, then try to create duplicate → Should fail ✅
+[ ] Register for open play, then try again → Should fail ✅
+[ ] Check database: Passwords are hashed (start with $2y$) ✅
+
+### Performance:
+[ ] Page loads normally (not slower)
+[ ] Database queries execute quickly
+[ ] No timeout errors
+[ ] No database connection errors
+
+## 🧹 POST-DEPLOYMENT CLEANUP
+
+### Step 11: Clean Up
+
+[ ] Delete test_security.php from live server (IMPORTANT!)
+[ ] Delete any test users created during testing
+[ ] Delete any test reservations
+[ ] Delete any test registrations
+[ ] Clear browser cache
+[ ] Test one more time with clean data
+
+### Step 12: Documentation
+
+[ ] Save deployment date: _______________
+[ ] Save database backup location: _______________
+[ ] Note any issues encountered: _______________
+[ ] Update internal documentation with security features
+
+## 📊 MONITORING (First 24 Hours)
+
+### Watch For:
+[ ] Check error logs for any unexpected errors
+[ ] Monitor user feedback (any complaints about duplicate errors?)
+[ ] Check database for any orphaned records
+[ ] Verify no performance degradation
+[ ] Confirm users can still complete normal operations
+
+### If Issues Occur:
+[ ] Check server error logs
+[ ] Check database error logs  
+[ ] Check browser console for JavaScript errors
+[ ] Refer to SECURITY_FEATURES.md for troubleshooting
+[ ] Restore from backup if critical issue
+
+## 🎉 SUCCESS CRITERIA
+
+Your deployment is successful when:
+✅ All tests pass (local and production)
+✅ Password hashing works (bcrypt)
+✅ Duplicate emails rejected
+✅ Duplicate reservations prevented
+✅ Duplicate registrations prevented
+✅ Normal operations work correctly
+✅ No error logs showing issues
+✅ Users can use the system normally
+✅ Database indexes applied and working
+
+## 📞 ROLLBACK PLAN (If Needed)
+
+If something goes wrong:
+
+### Step 1: Restore Files
+[ ] Upload previous version of reservations.php
+[ ] Upload previous version of open-play.php
+
+### Step 2: Restore Database (if needed)
+[ ] Import backup SQL file via phpMyAdmin
+[ ] Verify data is restored
+
+### Step 3: Test
+[ ] Verify old system works
+[ ] Note what went wrong
+[ ] Fix issue before re-deploying
+
+## 📝 NOTES
+
+Use this space for deployment notes:
+
+Deployment Date: _______________
+Deployed By: _______________
+Server: _______________
+Database: _______________
+
+Issues Encountered:
+_________________________________________________
+_________________________________________________
+
+Resolutions:
+_________________________________________________
+_________________________________________________
+
+Additional Notes:
+_________________________________________________
+_________________________________________________
+
+====================================================
+DEPLOYMENT CHECKLIST v2.0
+Last Updated: June 20, 2026
+====================================================
+

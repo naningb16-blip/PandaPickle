@@ -1,0 +1,265 @@
+ROUND FILTER FEATURE
+====================
+
+Date: June 20, 2026
+
+FEATURE ADDED:
+--------------
+
+Added dropdown filters above the Generated Matches table to filter by Session and Round.
+Admins can now easily manage and view specific rounds or sessions.
+
+KEY FEATURES:
+-------------
+
+1. Filter Dropdowns
+   
+   a) Session Filter
+      - Shows all sessions that have generated matches
+      - Option: "All Sessions" (default)
+      - Auto-submit on change
+      - Filters matches by selected session
+   
+   b) Round Filter
+      - Shows all rounds that have been generated
+      - Option: "All Rounds" (default)
+      - Auto-submit on change
+      - Filters matches by selected round
+      - Rounds sorted in descending order (newest first)
+
+2. Combined Filtering
+   - Can filter by Session only
+   - Can filter by Round only
+   - Can filter by both Session AND Round
+   - Filters work together (AND logic)
+
+3. Clear Filters Button
+   - Appears when any filter is active
+   - One click to reset all filters
+   - Returns to "All Sessions" and "All Rounds" view
+
+4. Empty State Messages
+   - Shows different messages based on context
+   - With filters: "No matches found for the selected filters."
+   - Without filters: "No matches generated yet. Create a session..."
+
+DISPLAY LAYOUT:
+---------------
+
+Card Header Layout:
+
+┌──────────────────────────────────────────────────────────┐
+│ Generated Matches (Doubles)                              │
+│                                                           │
+│ [Session Dropdown ▼] [Round Dropdown ▼] [Clear Filters] │
+└──────────────────────────────────────────────────────────┘
+
+Dropdown Options:
+
+Session Filter:
+- All Sessions
+- Friday Night Open Play
+- Saturday Morning Session
+- (etc.)
+
+Round Filter:
+- All Rounds
+- Round 5
+- Round 4
+- Round 3
+- Round 2
+- Round 1
+
+WORKFLOW EXAMPLES:
+------------------
+
+Example 1: View All Matches for Round 2
+1. Click "Round" dropdown
+2. Select "Round 2"
+3. Page refreshes automatically
+4. Only Round 2 matches displayed
+5. Click "Clear Filters" to see all rounds again
+
+Example 2: View All Matches for Specific Session
+1. Click "Session" dropdown
+2. Select "Friday Night Open Play"
+3. Page refreshes automatically
+4. Only matches from that session displayed
+
+Example 3: View Round 3 of Friday Night Session
+1. Select "Friday Night Open Play" from Session dropdown
+2. Select "Round 3" from Round dropdown
+3. Only Round 3 matches from Friday Night session displayed
+
+Example 4: Manage Current Round
+1. Generate matches (creates Round 1)
+2. Play matches
+3. Mark matches as "Finished"
+4. Generate new matches (creates Round 2)
+5. Use Round filter to toggle between Round 1 and Round 2
+6. Manage each round independently
+
+TECHNICAL IMPLEMENTATION:
+-------------------------
+
+1. Query Building
+   - Base query joins all necessary tables
+   - Adds WHERE conditions based on filters
+   - Uses prepared statements for security
+   - Maintains ORDER BY for consistent sorting
+
+2. Filter Parameters
+   - filter_session: Session ID (0 = all)
+   - filter_round: Round number (0 = all)
+   - Passed via GET parameters in URL
+
+3. Dynamic Dropdowns
+   - Session dropdown populated from sessions with matches
+   - Round dropdown populated from distinct rounds in matches table
+   - Both sorted appropriately
+
+4. Auto-Submit
+   - Dropdowns use onchange="this.form.submit()"
+   - Instant filtering without clicking submit button
+   - Clean user experience
+
+CODE CHANGES:
+-------------
+
+admin/open-play.php
+
+1. Added filter parameter extraction:
+   - $filterRound = isset($_GET['filter_round']) ? (int)$_GET['filter_round'] : 0;
+   - $filterSession = isset($_GET['filter_session']) ? (int)$_GET['filter_session'] : 0;
+
+2. Modified matches query:
+   - Dynamic WHERE clause building
+   - Conditional query execution with parameters
+   - Maintains all JOINs for complete data
+
+3. Added filter data queries:
+   - Get available rounds
+   - Get sessions with matches
+
+4. Added filter UI in card header:
+   - Session dropdown
+   - Round dropdown
+   - Clear filters button
+   - Responsive flex layout
+
+5. Added empty state handling:
+   - Different messages for filtered vs unfiltered views
+   - Centered, styled placeholder text
+
+BENEFITS:
+---------
+
+✓ Easy round management
+✓ Quick session switching
+✓ Focus on specific rounds
+✓ Better match organization
+✓ Cleaner interface when many matches
+✓ Faster match completion tracking
+✓ Mobile-friendly dropdowns
+✓ No page reload required for filtering
+✓ Maintains all finish/reset functionality
+
+USE CASES:
+----------
+
+1. During Active Play:
+   - Filter to current round
+   - Mark matches as finished
+   - Generate next round
+   - Switch to new round filter
+
+2. Review Previous Rounds:
+   - Select older round
+   - Review completed matches
+   - Reset if needed
+
+3. Multi-Session Management:
+   - Filter by session
+   - Manage each session separately
+   - Track session-specific rounds
+
+4. End of Session:
+   - View all rounds for summary
+   - Export/review complete history
+   - Plan next session
+
+MOBILE OPTIMIZATION:
+--------------------
+
+Mobile Behavior:
+- Dropdowns are touch-friendly
+- Filters wrap on small screens
+- Clear button accessible
+- Auto-submit works on mobile
+- No horizontal scroll
+
+FILTER PERSISTENCE:
+-------------------
+
+Current Implementation:
+- Filters reset on page navigation
+- Back button preserves filters (browser history)
+- Clear filters button resets to default
+
+Future Enhancement Options:
+- Save filter preference in session
+- Remember last used filter
+- Add to URL for sharing filtered views
+
+TESTING:
+--------
+
+Test Scenario 1: Filter by Round
+1. Generate multiple rounds
+2. Select "Round 1" from dropdown
+✓ Only Round 1 matches displayed
+✓ Other rounds hidden
+
+Test Scenario 2: Filter by Session
+1. Create multiple sessions with matches
+2. Select specific session
+✓ Only that session's matches shown
+✓ All rounds from that session visible
+
+Test Scenario 3: Combined Filters
+1. Select specific session AND round
+✓ Only matches from that session AND round shown
+✓ Precise filtering
+
+Test Scenario 4: Clear Filters
+1. Apply filters
+2. Click "Clear Filters"
+✓ All matches shown again
+✓ Dropdowns reset to "All"
+
+Test Scenario 5: No Matches
+1. Select filter with no matches
+✓ Shows "No matches found" message
+✓ No error displayed
+
+NOTES:
+------
+
+- Filters are optional (default shows all)
+- Filtering doesn't affect match generation
+- Can still finish/reset matches while filtered
+- Filter state visible in URL parameters
+- Works with all existing features
+- No database changes required
+
+FILES MODIFIED:
+---------------
+
+admin/open-play.php
+- Added filter parameter handling
+- Modified matches query with dynamic WHERE
+- Added filter dropdowns in UI
+- Added empty state handling
+- Added clear filters button
+
+The round filter is now complete and ready to use! 🎯

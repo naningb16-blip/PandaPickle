@@ -1,0 +1,126 @@
+OPEN PLAY TEAM PRICING FIX
+==========================
+
+Date: June 20, 2026
+
+ISSUE:
+------
+
+Open play pricing was showing PHP 50 per registration, but since it's a TEAM registration
+(2 players: you + partner), the total should be PHP 100 per team (PHP 50 × 2 players).
+
+CHANGES MADE:
+-------------
+
+1. CALCULATION FIXES:
+
+   a) open-play.php (User Registration)
+      - Changed: $fee = (float) $session['fee_per_player'];
+      - To: $fee = (float) $session['fee_per_player'] * 2; // 2 players per team
+      - Now correctly charges PHP 100 per team registration
+
+   b) admin/open-play.php (Walk-in Registration)
+      - Changed: $fee = (float) $session['fee_per_player'];
+      - To: $fee = (float) $session['fee_per_player'] * 2; // 2 players per team
+      - Walk-in registrations now also charge PHP 100 per team
+
+2. DISPLAY UPDATES:
+
+   a) open-play.php (User Page)
+      - Updated page header: "PHP 50 per player (PHP 100 per team)"
+      - Changed table column header: "Fee/Player" → "Fee/Team"
+      - Updated table display to show: formatMoney($fee_per_player * 2)
+
+   b) admin/open-play.php (Admin Page)
+      - Changed table column header: "Fee" → "Fee/Team"
+      - Updated display: Shows "PHP 100.00 (₱50 × 2)" to clarify the calculation
+      - Makes it clear it's per-player × 2
+
+PRICING BREAKDOWN:
+------------------
+
+Database stores: fee_per_player = 50.00
+Calculation: fee_per_player × 2 = 100.00
+Display: "PHP 100.00" or "PHP 100.00 (₱50 × 2)"
+
+Registration includes:
+- Player 1 (registering user or walk-in player) = PHP 50
+- Player 2 (partner) = PHP 50
+- Total per team = PHP 100
+
+AFFECTED AREAS:
+---------------
+
+✓ User registration form (open-play.php)
+✓ Admin walk-in registration (admin/open-play.php)
+✓ Payment records (total_amount now correct)
+✓ Display tables (showing correct team pricing)
+✓ Registration confirmation messages
+
+TESTING:
+--------
+
+Test as User:
+1. Go to Open Play page
+2. Check header shows "PHP 50 per player (PHP 100 per team)"
+3. Register for a session
+4. Verify total_amount = 100.00 in database
+5. Check "My Registrations" shows PHP 100.00
+
+Test as Admin:
+1. Go to Admin → Open Play Sessions
+2. Check sessions table shows "PHP 100.00 (₱50 × 2)"
+3. Create walk-in registration
+4. Verify total_amount = 100.00 in database
+5. Check registrations table shows PHP 100.00
+
+Verify Database:
+SELECT id, user_name, partner_name, total_amount 
+FROM open_play_registrations 
+ORDER BY created_at DESC;
+
+All total_amount values should be 100.00 for new registrations.
+
+BACKWARDS COMPATIBILITY:
+------------------------
+
+Old registrations in database with total_amount = 50.00 will remain unchanged.
+Only NEW registrations (after this fix) will have total_amount = 100.00.
+
+If you want to fix old records:
+UPDATE open_play_registrations 
+SET total_amount = 100.00 
+WHERE total_amount = 50.00;
+
+UPDATE payments 
+SET amount = 100.00 
+WHERE payment_type = 'open_play' AND amount = 50.00;
+
+FILES MODIFIED:
+---------------
+
+1. open-play.php
+   - Fee calculation (× 2)
+   - Page header text
+   - Table column header
+   - Table display value
+
+2. admin/open-play.php
+   - Walk-in fee calculation (× 2)
+   - Table column header
+   - Table display value with breakdown
+
+NO DATABASE CHANGES:
+--------------------
+
+No migration needed. The database structure remains the same.
+Only the application logic and display were updated.
+
+NOTES:
+------
+
+- This is a doubles format (2v2 matches require 4 players)
+- Each registration represents ONE TEAM (2 players)
+- Fee structure: PHP 50 per player, PHP 100 per team
+- Admin can still configure fee_per_player when creating sessions
+- If admin sets fee_per_player = 60, team total will be PHP 120

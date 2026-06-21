@@ -1,0 +1,74 @@
+RESERVATION SYSTEM UPDATE - INSTRUCTIONS
+=========================================
+
+CHANGES MADE:
+-------------
+1. Removed payment proof upload system
+2. Added payment method selection (Cash or Cashless)
+3. All reservations start with "unpaid" status
+4. Admin can update payment status via dropdown (paid/unpaid)
+5. Admin can ONLY approve if payment status is "paid"
+6. Admin can reject anytime regardless of payment status
+
+DATABASE UPDATE REQUIRED:
+-------------------------
+Run this SQL command to add the payment_method column:
+
+    mysql -u your_username -p pandapickle < database/migration_add_payment_method.sql
+
+Or manually run:
+
+    ALTER TABLE exclusive_reservations 
+    ADD COLUMN payment_method ENUM('cash', 'cashless') NOT NULL DEFAULT 'cash' 
+    AFTER total_amount;
+
+HOW IT WORKS NOW:
+-----------------
+CUSTOMER SIDE:
+1. User creates a reservation
+2. User selects payment method:
+   - Cash: Will pay on arrival
+   - Cashless: Will pay via GCash/Bank Transfer
+3. System submits reservation with:
+   - Reservation Status = "pending"
+   - Payment Status = "unpaid"
+4. User waits for admin approval
+
+ADMIN SIDE:
+1. Admin sees all reservations with:
+   - Payment Method (Cash or Cashless)
+   - Payment Status (dropdown: paid/unpaid)
+   - Reservation Status (pending, approved, rejected)
+
+2. Admin workflow:
+   - Customer submits reservation → Status: pending, Payment: unpaid
+   - Customer makes payment (cash/cashless)
+   - Admin verifies payment received
+   - Admin changes payment status dropdown from "unpaid" to "paid"
+   - Admin clicks "Approve" button (only enabled when payment is "paid")
+   - OR admin can "Reject" anytime
+
+3. Approve button rules:
+   - ENABLED: Only when payment status is "paid"
+   - DISABLED: When payment status is "unpaid"
+   - Reject button: Always enabled for pending reservations
+
+PAYMENT VERIFICATION FLOW:
+---------------------------
+1. Customer books and selects payment method
+2. Customer makes payment (in-person cash OR online transfer)
+3. Admin receives payment confirmation
+4. Admin updates payment status to "paid" using dropdown
+5. Admin approves the reservation
+
+NOTES:
+------
+- All new reservations start with payment status = "unpaid"
+- Admin must manually update payment status after verifying payment
+- Admin cannot approve until payment status is "paid"
+- Admin can reject at any time regardless of payment status
+- Payment status dropdown auto-submits on change
+- For approved/rejected reservations, payment status is displayed as badge (not editable)
+- Existing reservations will default to "cash" payment method
+- Admin sidebar now only shows "Reservations" menu
+- Admin index redirects directly to reservations page

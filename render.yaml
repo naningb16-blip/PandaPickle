@@ -1,0 +1,35 @@
+services:
+  # Web Service (PHP Application)
+  - type: web
+    name: pandapickle-web
+    env: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: pandapickle-db
+          property: host
+      - key: DB_NAME
+        fromDatabase:
+          name: pandapickle-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: pandapickle-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pandapickle-db
+          property: password
+      - key: APP_ENV
+        value: production
+    healthCheckPath: /
+
+databases:
+  # MySQL Database
+  - name: pandapickle-db
+    databaseName: pandapickle
+    user: pandapickle_user
+    plan: starter

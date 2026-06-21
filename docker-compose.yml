@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./uploads:/var/www/html/uploads
+    environment:
+      - DB_HOST=db
+      - DB_NAME=pandapickle
+      - DB_USER=pandapickle_user
+      - DB_PASSWORD=your_secure_password_here
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_here
+      MYSQL_DATABASE: pandapickle
+      MYSQL_USER: pandapickle_user
+      MYSQL_PASSWORD: your_secure_password_here
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/migration_add_walkin_customer.sql:/docker-entrypoint-initdb.d/02-migration.sql
+      - ./database/migration_add_walkin_openplay.sql:/docker-entrypoint-initdb.d/03-migration.sql
+      - ./database/migration_matches_use_registrations.sql:/docker-entrypoint-initdb.d/04-migration.sql
+      - ./database/migration_add_match_preference.sql:/docker-entrypoint-initdb.d/05-migration.sql
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
