@@ -12,7 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = loginUser($_POST['email'] ?? '', $_POST['password'] ?? '');
     if ($result['success']) {
         flash('success', $result['message']);
-        header('Location: dashboard.php');
+        // Redirect admins to admin dashboard, customers to user dashboard
+        if (isAdmin()) {
+            header('Location: admin/index.php');
+        } else {
+            header('Location: dashboard.php');
+        }
         exit;
     }
     $error = $result['message'];

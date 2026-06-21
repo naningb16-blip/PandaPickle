@@ -3,6 +3,12 @@
 require_once __DIR__ . '/includes/auth.php';
 requireLogin();
 
+// Redirect admins to admin panel - this is the customer dashboard
+if (isAdmin()) {
+    header('Location: admin/index.php');
+    exit;
+}
+
 $user = getCurrentUser();
 $db = getDB();
 

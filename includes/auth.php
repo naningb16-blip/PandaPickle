@@ -30,7 +30,7 @@ function requireAdmin(): void
     $user = getCurrentUser();
     if (!$user || $user['role'] !== 'admin') {
         flash('error', 'Admin access required.');
-        header('Location: dashboard.php');
+        header('Location: ../dashboard.php');
         exit;
     }
 }
