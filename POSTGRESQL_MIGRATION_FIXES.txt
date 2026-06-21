@@ -1,0 +1,83 @@
+========================================
+POSTGRESQL MIGRATION - SQL FUNCTION FIXES
+========================================
+
+ISSUE:
+------
+After deploying to Render with PostgreSQL, the application was throwing errors because it was using MySQL-specific SQL functions that don't exist in PostgreSQL.
+
+Error Example:
+  SQLSTATE[42883]: Undefined function: 7 ERROR: function curdate() does not exist
+
+MYSQL vs POSTGRESQL SQL FUNCTIONS:
+-----------------------------------
+
+1. CURDATE() → CURRENT_DATE
+   MySQL: WHERE date_column >= CURDATE()
+   PostgreSQL: WHERE date_column >= CURRENT_DATE
+
+2. DATE_SUB(NOW(), INTERVAL X MINUTE/DAY) → NOW() - INTERVAL 'X minutes/days'
+   MySQL: WHERE created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+   PostgreSQL: WHERE created_at > NOW() - INTERVAL '5 minutes'
+
+3. NOW() - Works in both (no change needed)
+
+FILES FIXED:
+------------
+
+✅ dashboard.php
+   - Changed CURDATE() to CURRENT_DATE (2 occurrences)
+
+✅ open-play.php
+   - Changed CURDATE() to CURRENT_DATE
+   - Changed DATE_SUB(NOW(), INTERVAL 5 MINUTE) to NOW() - INTERVAL '5 minutes'
+
+✅ reservations.php
+   - Changed DATE_SUB(NOW(), INTERVAL 5 MINUTE) to NOW() - INTERVAL '5 minutes'
+
+✅ admin/index.php
+   - Changed CURDATE() to CURRENT_DATE
+
+✅ admin/open-play.php
+   - Changed CURDATE() to CURRENT_DATE
+
+✅ admin/reports.php
+   - Changed DATE_SUB(CURDATE(), INTERVAL 7 DAY) to CURRENT_DATE - INTERVAL '7 days'
+   - Changed DATE_SUB(CURDATE(), INTERVAL 30 DAY) to CURRENT_DATE - INTERVAL '30 days'
+   - Changed DATE(verified_at) = CURDATE() to DATE(verified_at) = CURRENT_DATE
+
+✅ admin/export.php
+   - Changed DATE_SUB(CURDATE(), INTERVAL 7 DAY) to CURRENT_DATE - INTERVAL '7 days'
+   - Changed DATE_SUB(CURDATE(), INTERVAL 30 DAY) to CURRENT_DATE - INTERVAL '30 days'
+   - Changed DATE(verified_at) = CURDATE() to DATE(verified_at) = CURRENT_DATE
+
+DEPLOYMENT STATUS:
+------------------
+✅ All SQL functions converted to PostgreSQL syntax
+✅ Changes committed to Git (commit: fea9532)
+✅ Changes pushed to GitHub (main branch)
+✅ Ready for Render to redeploy
+
+NEXT STEPS ON RENDER:
+----------------------
+1. Go to your Render Dashboard
+2. Open your web service (pandapickle-web)
+3. Click "Manual Deploy" → "Deploy latest commit"
+   OR
+4. Wait for automatic deployment (if auto-deploy is enabled)
+
+5. After deployment completes, the application should work without SQL function errors!
+
+ADDITIONAL FILES CREATED:
+-------------------------
+✅ setup-admin.php - First-time admin setup (standalone page)
+✅ admin/register-admin.php - Admin management page (requires admin login)
+
+These files were created to help you register admin accounts for your deployed application.
+
+IMPORTANT SECURITY NOTE:
+------------------------
+After creating your first admin account using setup-admin.php, DELETE that file immediately for security!
+
+Date: 2026-06-21
+Status: COMPLETE ✅
