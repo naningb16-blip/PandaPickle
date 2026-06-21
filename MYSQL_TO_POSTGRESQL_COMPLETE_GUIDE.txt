@@ -126,7 +126,25 @@ Example from our code:
    We had to add s.title, s.session_date, reg.match_preference to GROUP BY
 
 ========================================
-10. DATA TYPES
+10. SELECT DISTINCT WITH ORDER BY
+========================================
+
+⚠️ IMPORTANT DIFFERENCE:
+
+MySQL: Allows ORDER BY on columns not in SELECT DISTINCT
+   SELECT DISTINCT id, name FROM table ORDER BY created_at  -- Works in MySQL
+
+PostgreSQL: ORDER BY columns MUST appear in SELECT DISTINCT list
+   SELECT DISTINCT id, name, created_at FROM table ORDER BY created_at  -- Required
+
+Example from our code:
+   MySQL:      SELECT DISTINCT s.id, s.title ... ORDER BY s.session_date
+   PostgreSQL: SELECT DISTINCT s.id, s.title, s.session_date ... ORDER BY s.session_date
+   
+   We had to add s.session_date to the SELECT list
+
+========================================
+11. DATA TYPES
 ========================================
 
 ✅ TEXT/BLOB types
@@ -157,6 +175,7 @@ SUMMARY OF FILES MODIFIED
    - 1× GROUP_CONCAT() → STRING_AGG()
    - 1× CONCAT() → ||
    - 1× GROUP BY fix (added missing columns)
+   - 1× SELECT DISTINCT ORDER BY fix
    - 6× UPDATE queries quote fixes
 
 ✅ reservations.php
@@ -239,12 +258,12 @@ After deployment, test these features:
 DEPLOYMENT INFORMATION
 ========================================
 
-Total Commits: 7
-Latest Commit: f4bf925
+Total Commits: 9
+Latest Commit: 58b93f9
 Branch: main
 Status: Ready for production ✅
 
 All MySQL-specific code has been successfully converted to PostgreSQL!
 
 Date: 2026-06-21
-Version: 1.0 (Complete)
+Version: 1.1 (Updated with SELECT DISTINCT fix)
