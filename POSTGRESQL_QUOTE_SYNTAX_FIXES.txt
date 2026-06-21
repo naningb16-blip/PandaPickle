@@ -57,13 +57,14 @@ FILES FIXED:
 
 ✅ admin/open-play.php
    - Fixed 9 locations with double-quoted strings
+   - Fixed 2 IF() to CASE WHEN (line ~130 and line 320)
    - Fixed RAND() to RANDOM()
 
 SUMMARY OF CHANGES:
 -------------------
 Total Files Modified: 4
 Total Quote Fixes: 16
-SQL Function Conversions: 2 (IF → CASE WHEN, RAND → RANDOM)
+SQL Function Conversions: 3 (2× IF → CASE WHEN, 1× RAND → RANDOM)
 
 POSTGRESQL SQL SYNTAX REFERENCE:
 ---------------------------------
@@ -80,19 +81,10 @@ DEPLOYMENT STATUS:
 ------------------
 ✅ All quote syntax issues fixed
 ✅ All MySQL-specific functions converted
-✅ Changes committed to Git (commit: d3fc65e)
+✅ Changes committed to Git (commits: d3fc65e, 7081736)
 ✅ Changes pushed to GitHub (main branch)
 ✅ Ready for Render to redeploy
 
-NEXT STEPS:
------------
-1. Go to Render Dashboard
-2. Verify branch is set to 'main' (not 'master')
-3. Click "Manual Deploy" → "Deploy latest commit"
-4. Monitor deployment logs
-5. Test the application
-
-The application should now work correctly with PostgreSQL on Render!
-
 Date: 2026-06-21
 Status: COMPLETE ✅
+Last Updated: After fixing line 320 in admin/open-play.php
