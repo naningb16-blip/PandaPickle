@@ -7,11 +7,11 @@
 // Cloudinary credentials - get these from your Cloudinary dashboard
 // https://console.cloudinary.com/
 define('CLOUDINARY_CLOUD_NAME', getenv('CLOUDINARY_CLOUD_NAME') ?: 'deiy19kv4');
-define('CLOUDINARY_API_KEY', getenv('CLOUDINARY_API_KEY') ?: '572354856766819');
-define('CLOUDINARY_API_SECRET', getenv('CLOUDINARY_API_SECRET') ?: 'rKBaLRXrB1Hzrfi_Dstxc6Gecsgheres');
+define('CLOUDINARY_API_KEY', getenv('CLOUDINARY_API_KEY') ?: '728712179468544');
+define('CLOUDINARY_API_SECRET', getenv('CLOUDINARY_API_SECRET') ?: 'sukP2I-zMeBWqwq2X0VGhQ6csWw');
 
 /**
- * Upload image to Cloudinary
+ * Upload image to Cloudinary using unsigned upload (simpler, no signature needed)
  * 
  * @param string $filePath Path to the file to upload
  * @param string $folder Folder name in Cloudinary (e.g., 'receipts')
@@ -19,33 +19,20 @@ define('CLOUDINARY_API_SECRET', getenv('CLOUDINARY_API_SECRET') ?: 'rKBaLRXrB1Hz
  */
 function uploadToCloudinary($filePath, $folder = 'receipts') {
     $cloudName = CLOUDINARY_CLOUD_NAME;
-    $apiKey = CLOUDINARY_API_KEY;
-    $apiSecret = CLOUDINARY_API_SECRET;
     
-    // Check if credentials are configured
-    if ($cloudName === 'your_cloud_name' || $apiKey === 'your_api_key' || empty($cloudName) || empty($apiKey)) {
-        error_log('Cloudinary credentials not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.');
+    // Check if cloud name is configured
+    if ($cloudName === 'your_cloud_name' || empty($cloudName)) {
+        error_log('Cloudinary cloud name not configured.');
         return false;
     }
     
-    // Generate timestamp and signature
-    $timestamp = time();
-    $publicId = $folder . '/' . 'receipt_' . $timestamp . '_' . uniqid();
-    
-    // Create signature
-    $signatureString = "folder={$folder}&public_id={$publicId}&timestamp={$timestamp}{$apiSecret}";
-    $signature = sha1($signatureString);
-    
-    // Prepare upload data
+    // Use unsigned upload with upload preset - NO SIGNATURE REQUIRED!
     $uploadUrl = "https://api.cloudinary.com/v1_1/{$cloudName}/image/upload";
+    $uploadPreset = 'pandapickle_receipts'; // The preset you just created
     
     $postData = [
         'file' => new CURLFile($filePath),
-        'api_key' => $apiKey,
-        'timestamp' => $timestamp,
-        'signature' => $signature,
-        'folder' => $folder,
-        'public_id' => $publicId
+        'upload_preset' => $uploadPreset
     ];
     
     // Upload via cURL
@@ -68,6 +55,14 @@ function uploadToCloudinary($filePath, $folder = 'receipts') {
     
     if ($httpCode !== 200) {
         error_log("Cloudinary upload failed with HTTP code {$httpCode}: {$response}");
+        
+        // Store last error for test page
+        $GLOBALS['cloudinary_last_error'] = [
+            'http_code' => $httpCode,
+            'response' => $response,
+            'error_data' => json_decode($response, true)
+        ];
+        
         return false;
     }
     

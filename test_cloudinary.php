@@ -44,13 +44,68 @@ require_once __DIR__ . '/config/cloudinary.php';
         if ($file['error'] === UPLOAD_ERR_OK) {
             echo '<div class="info">File received: ' . htmlspecialchars($file['name']) . ' (' . number_format($file['size'] / 1024, 2) . ' KB)</div>';
             
+            // Enable error reporting for detailed diagnostics
+            ini_set('display_errors', 1);
+            error_reporting(E_ALL);
+            
+            echo '<h3>🔍 Testing Cloudinary Upload...</h3>';
+            
+            // Show what we're signing
+            $timestamp = time();
+            $folderTest = 'pandapickle/test';
+            $eager = "f_auto,q_auto";
+            $folderEscaped = str_replace('/', '\\/', $folderTest);
+            $ourSignatureString = "eager={$eager}&folder={$folderEscaped}&timestamp={$timestamp}" . CLOUDINARY_API_SECRET;
+            $ourSignature = sha1($ourSignatureString);
+            
+            echo '<div class="info">';
+            echo '<strong>🔐 Signature Debug:</strong><br>';
+            echo 'String to sign: <code>' . htmlspecialchars("eager={$eager}&folder={$folderEscaped}&timestamp={$timestamp}") . '</code><br>';
+            echo 'API Secret: <code>' . htmlspecialchars(CLOUDINARY_API_SECRET) . '</code><br>';
+            echo 'Full string with secret: <code>' . htmlspecialchars($ourSignatureString) . '</code><br>';
+            echo 'Our signature: <code>' . $ourSignature . '</code><br>';
+            echo '</div>';
+            
             // Try to upload to Cloudinary
             $result = uploadToCloudinary($file['tmp_name'], 'pandapickle/test');
             
             if ($result === false) {
                 echo '<div class="error">';
-                echo '<strong>❌ Upload Failed!</strong><br>';
-                echo 'Check your Cloudinary credentials or check error logs.';
+                echo '<strong>❌ Upload Failed!</strong><br><br>';
+                
+                // Show detailed diagnostic info
+                echo '<strong>Diagnostics:</strong><br>';
+                echo 'Cloud Name: ' . CLOUDINARY_CLOUD_NAME . '<br>';
+                echo 'API Key: ' . CLOUDINARY_API_KEY . '<br>';
+                echo 'API Secret Length: ' . strlen(CLOUDINARY_API_SECRET) . ' characters<br>';
+                echo 'cURL Enabled: ' . (function_exists('curl_version') ? '✅ Yes' : '❌ No') . '<br>';
+                
+                if (function_exists('curl_version')) {
+                    $curlVersion = curl_version();
+                    echo 'cURL Version: ' . $curlVersion['version'] . '<br>';
+                    echo 'SSL Version: ' . $curlVersion['ssl_version'] . '<br>';
+                }
+                
+                // Show actual error from Cloudinary
+                if (isset($GLOBALS['cloudinary_last_error'])) {
+                    $error = $GLOBALS['cloudinary_last_error'];
+                    echo '<br><strong>⚠️ Cloudinary API Response:</strong><br>';
+                    echo 'HTTP Code: ' . $error['http_code'] . '<br>';
+                    
+                    if (isset($error['error_data'])) {
+                        echo '<pre style="background:#fff;padding:10px;border:1px solid #ccc;overflow:auto;">';
+                        echo htmlspecialchars(json_encode($error['error_data'], JSON_PRETTY_PRINT));
+                        echo '</pre>';
+                    } else {
+                        echo 'Raw Response:<br>';
+                        echo '<pre style="background:#fff;padding:10px;border:1px solid #ccc;overflow:auto;">';
+                        echo htmlspecialchars($error['response']);
+                        echo '</pre>';
+                    }
+                }
+                
+                echo '<br><strong>Check PHP Error Log:</strong><br>';
+                echo 'Look in XAMPP Control Panel → Logs → PHP Error Log for details.<br>';
                 echo '</div>';
             } else {
                 echo '<div class="success">';

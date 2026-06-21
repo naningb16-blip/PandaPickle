@@ -3,16 +3,8 @@
 ========================================
 
 ✅ LOCAL SETUP: COMPLETE
-Your credentials are now configured in config/cloudinary.php
-
-✅ TESTING LOCALLY:
-1. Go to http://localhost/PandaPickle
-2. Login as user
-3. Make a reservation
-4. Click "Pay Now"
-5. Upload a receipt image
-6. It will upload to Cloudinary!
-7. Check: https://console.cloudinary.com/console/c-deiy19kv4/media_library
+✅ CLOUDINARY UPLOAD: WORKING!
+Using unsigned upload preset - much simpler!
 
 ========================================
 📋 ADD TO RENDER ENVIRONMENT VARIABLES
@@ -24,7 +16,7 @@ Go to Render Dashboard:
 3. Click "Environment" tab on the left
 4. Click "Add Environment Variable" button
 
-Add these 3 variables:
+Add ONLY this 1 variable (upload preset handles the rest):
 
 ┌─────────────────────────────────────────────────────────┐
 │ Variable 1:                                             │
@@ -32,17 +24,7 @@ Add these 3 variables:
 │ Value: deiy19kv4                                        │
 └─────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────┐
-│ Variable 2:                                             │
-│ Key:   CLOUDINARY_API_KEY                               │
-│ Value: 572354856766819                                  │
-└─────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────┐
-│ Variable 3:                                             │
-│ Key:   CLOUDINARY_API_SECRET                            │
-│ Value: rKBaLRXrB1Hzrfi_Dstxc6Gecsgheres                 │
-└─────────────────────────────────────────────────────────┘
+That's it! No API key or secret needed for unsigned uploads!
 
 5. Click "Save Changes"
 6. Render will automatically redeploy
