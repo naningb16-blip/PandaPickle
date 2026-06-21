@@ -78,7 +78,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php else: ?>
                     <table class="data-table">
                         <thead>
-                            <tr><th>Code</th><th>Date</th><th>Time</th><th>Payment</th><th>Status</th></tr>
+                            <tr><th>Code</th><th>Date</th><th>Time</th><th>Payment</th><th>Status</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                             <?php foreach ($upcomingReservations as $r): ?>
@@ -88,6 +88,15 @@ require_once __DIR__ . '/includes/header.php';
                                 <td><?= e(formatTime($r['start_time'])) ?> - <?= e(formatTime($r['end_time'])) ?></td>
                                 <td><span class="badge <?= statusBadgeClass($r['payment_status'] ?? 'unpaid') ?>"><?= e($r['payment_status'] ?? 'unpaid') ?></span></td>
                                 <td><span class="badge <?= statusBadgeClass($r['status']) ?>"><?= e($r['status']) ?></span></td>
+                                <td>
+                                    <?php if (($r['payment_status'] ?? 'unpaid') === 'unpaid'): ?>
+                                        <a href="payment-info.php?reservation_id=<?= (int)$r['id'] ?>" class="btn btn-sm btn-success">
+                                            💳 Pay Now
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -107,7 +116,7 @@ require_once __DIR__ . '/includes/header.php';
                 <?php else: ?>
                     <table class="data-table">
                         <thead>
-                            <tr><th>Session</th><th>Date</th><th>Team</th><th>Status</th><th>Payment</th></tr>
+                            <tr><th>Session</th><th>Date</th><th>Team</th><th>Status</th><th>Payment</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                             <?php foreach ($openPlayRegs as $reg): ?>
@@ -117,6 +126,15 @@ require_once __DIR__ . '/includes/header.php';
                                 <td><?= e($reg['user_name'] ?: 'You') ?> & <?= e($reg['partner_name']) ?></td>
                                 <td><span class="badge <?= statusBadgeClass($reg['status']) ?>"><?= e($reg['status']) ?></span></td>
                                 <td><span class="badge <?= statusBadgeClass($reg['payment_status'] ?? 'unpaid') ?>"><?= e($reg['payment_status'] ?? 'unpaid') ?></span></td>
+                                <td>
+                                    <?php if (($reg['payment_status'] ?? 'unpaid') === 'unpaid'): ?>
+                                        <a href="payment-info.php?registration_id=<?= (int)$reg['id'] ?>" class="btn btn-sm btn-success">
+                                            💳 Pay Now
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
