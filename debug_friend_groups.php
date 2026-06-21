@@ -97,7 +97,7 @@ $friendGroupsQuery = "
         reg.friend_group,
         reg.match_preference,
         COUNT(DISTINCT reg.id) as team_count,
-        GROUP_CONCAT(DISTINCT CONCAT(COALESCE(reg.user_name, u.fullname), ' & ', reg.partner_name) SEPARATOR ' | ') as teams,
+        STRING_AGG(DISTINCT COALESCE(reg.user_name, u.fullname) || ' & ' || reg.partner_name, ' | ') as teams,
         MIN(m.game_number) as first_game,
         MAX(m.game_number) as last_game,
         COUNT(DISTINCT m.id) as matches_count
@@ -114,7 +114,7 @@ $friendGroupsQuery = "
     AND reg.friend_group IS NOT NULL 
     AND reg.friend_group != ''
     AND reg.status = 'approved'
-    GROUP BY s.id, reg.friend_group
+    GROUP BY s.id, s.title, s.session_date, reg.friend_group, reg.match_preference
     ORDER BY s.session_date DESC, reg.friend_group
 ";
 
