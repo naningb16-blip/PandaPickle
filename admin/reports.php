@@ -25,18 +25,27 @@ $openPlayRevenue = (float) $db->query(
 )->fetchColumn();
 
 $reservationReport = $db->query(
-    'SELECT r.*, u.fullname, c.court_name, p.payment_status
+    'SELECT r.*, 
+            COALESCE(r.customer_name, u.fullname) as customer_name,
+            c.court_name, 
+            p.payment_status,
+            CASE WHEN r.user_id IS NULL THEN \'walk-in\' ELSE \'online\' END as booking_type
      FROM exclusive_reservations r
-     JOIN users u ON u.id = r.user_id
+     LEFT JOIN users u ON u.id = r.user_id
      JOIN courts c ON c.id = r.court_id
      LEFT JOIN payments p ON p.reservation_id = r.id
      ORDER BY r.created_at DESC LIMIT 50'
 )->fetchAll();
 
 $openPlayReport = $db->query(
-    'SELECT reg.*, u.fullname, s.title, s.session_date, p.payment_status
+    'SELECT reg.*, 
+            COALESCE(reg.user_name, u.fullname) as customer_name,
+            s.title, 
+            s.session_date, 
+            p.payment_status,
+            CASE WHEN reg.user_id IS NULL THEN \'walk-in\' ELSE \'online\' END as booking_type
      FROM open_play_registrations reg
-     JOIN users u ON u.id = reg.user_id
+     LEFT JOIN users u ON u.id = reg.user_id
      JOIN open_play_sessions s ON s.id = reg.session_id
      LEFT JOIN payments p ON p.registration_id = reg.id
      ORDER BY reg.created_at DESC LIMIT 50'
@@ -82,13 +91,14 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="card-body table-wrap">
                     <table class="data-table">
                         <thead>
-                            <tr><th>Code</th><th>Customer</th><th>Court</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th></tr>
+                            <tr><th>Code</th><th>Type</th><th>Customer</th><th>Court</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th></tr>
                         </thead>
                         <tbody>
                             <?php foreach ($reservationReport as $r): ?>
                             <tr>
                                 <td><?= e($r['reservation_code']) ?></td>
-                                <td><?= e($r['fullname']) ?></td>
+                                <td><span class="badge <?= $r['booking_type'] === 'walk-in' ? 'badge-info' : 'badge-muted' ?>"><?= e($r['booking_type']) ?></span></td>
+                                <td><?= e($r['customer_name']) ?></td>
                                 <td><?= e($r['court_name']) ?></td>
                                 <td><?= e(formatDate($r['reservation_date'])) ?></td>
                                 <td><?= e(formatMoney((float) $r['total_amount'])) ?></td>
@@ -106,15 +116,16 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="card-body table-wrap">
                     <table class="data-table">
                         <thead>
-                            <tr><th>Session</th><th>Customer</th><th>Date</th><th>Team</th><th>Amount</th><th>Status</th><th>Payment</th></tr>
+                            <tr><th>Session</th><th>Type</th><th>Customer</th><th>Date</th><th>Team</th><th>Amount</th><th>Status</th><th>Payment</th></tr>
                         </thead>
                         <tbody>
                             <?php foreach ($openPlayReport as $reg): ?>
                             <tr>
                                 <td><?= e($reg['title']) ?></td>
-                                <td><?= e($reg['fullname']) ?></td>
+                                <td><span class="badge <?= $reg['booking_type'] === 'walk-in' ? 'badge-info' : 'badge-muted' ?>"><?= e($reg['booking_type']) ?></span></td>
+                                <td><?= e($reg['customer_name']) ?></td>
                                 <td><?= e(formatDate($reg['session_date'])) ?></td>
-                                <td><?= e($reg['user_name'] ?: $reg['fullname']) ?> & <?= e($reg['partner_name']) ?></td>
+                                <td><?= e($reg['user_name'] ?: $reg['customer_name']) ?> & <?= e($reg['partner_name']) ?></td>
                                 <td><?= e(formatMoney((float) $reg['total_amount'])) ?></td>
                                 <td><?= e($reg['status']) ?></td>
                                 <td><?= e($reg['payment_status'] ?? 'unpaid') ?></td>
