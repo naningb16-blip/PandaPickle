@@ -4,13 +4,17 @@ services:
     name: pandapickle-web
     env: docker
     region: oregon
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     envVars:
       - key: DB_HOST
         fromDatabase:
           name: pandapickle-db
           property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: pandapickle-db
+          property: port
       - key: DB_NAME
         fromDatabase:
           name: pandapickle-db
@@ -28,8 +32,8 @@ services:
     healthCheckPath: /
 
 databases:
-  # MySQL Database
+  # PostgreSQL Database
   - name: pandapickle-db
     databaseName: pandapickle
     user: pandapickle_user
-    plan: starter
+    plan: free
