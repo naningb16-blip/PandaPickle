@@ -324,7 +324,7 @@ $registrations = $db->query(
             u.email, 
             s.title, 
             p.payment_status,
-            IF(reg.user_id IS NULL, "walk-in", "online") as booking_type
+            CASE WHEN reg.user_id IS NULL THEN \'walk-in\' ELSE \'online\' END as booking_type
      FROM open_play_registrations reg
      LEFT JOIN users u ON u.id = reg.user_id
      JOIN open_play_sessions s ON s.id = reg.session_id
