@@ -47,10 +47,6 @@ require_once __DIR__ . '/includes/header.php';
             <p class="text-center mt-1 text-muted">
                 No account? <a href="register.php" class="text-green">Register here</a>
             </p>
-            <div class="form-hint text-center mt-2">
-                Admin: <code>admin@pandapickle.com</code> / <code>admin123</code><br>
-                Customer: <code>demo@pandapickle.com</code> / <code>demo123</code>
-            </div>
         </div>
     </div>
 </div>
