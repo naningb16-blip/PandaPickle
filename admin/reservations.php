@@ -159,9 +159,8 @@ require_once __DIR__ . '/../includes/header.php';
         <?php require __DIR__ . '/includes/sidebar.php'; ?>
         <div>
             <!-- Walk-in Reservation Form -->
-            <?php /* DEBUG: This form should be visible */ ?>
-            <div class="card mb-2" style="border: 2px solid red;">
-                <div class="card-header" style="background: #ffcccc;"><h3>🆕 Create Walk-in Reservation (NEW FEATURE)</h3></div>
+            <div class="card mb-2">
+                <div class="card-header"><h3>🆕 Create Walk-in Reservation</h3></div>
                 <div class="card-body">
                     <form method="POST">
                         <div class="form-row">
