@@ -196,6 +196,24 @@ require_once __DIR__ . '/includes/header.php';
         <div class="alert alert-error"><?= e($error) ?></div>
     <?php endif; ?>
 
+    <div class="card mb-2" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #059669;">
+        <div class="card-header" style="background: #059669; color: white;">
+            <h3 style="margin: 0; color: white;">🏓 Open Play Registration</h3>
+        </div>
+        <div class="card-body">
+            <p style="margin-bottom: 1rem; line-height: 1.6; font-size: 1rem;">
+                Join community open play sessions created by our admin team. Register players and pay the session fee online.
+            </p>
+            <ul style="list-style: none; padding-left: 0; line-height: 1.8; font-size: 0.95rem;">
+                <li style="margin-bottom: 0.5rem;">✓ View available slots</li>
+                <li style="margin-bottom: 0.5rem;">✓ Register multiple players</li>
+                <li style="margin-bottom: 0.5rem;">✓ Track registration status</li>
+                <li style="margin-bottom: 0.5rem;">✓ Register With Friends Only</li>
+                <li style="margin-bottom: 0.5rem;">✓ Pay Via cash or cashless</li>
+            </ul>
+        </div>
+    </div>
+
     <div class="card mb-2">
         <div class="card-header"><h3>Available Sessions</h3></div>
         <div class="card-body table-wrap">
