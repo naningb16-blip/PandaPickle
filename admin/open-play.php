@@ -416,7 +416,7 @@ if (!empty($params)) {
 $rounds = $db->query('SELECT DISTINCT match_round FROM open_play_matches ORDER BY match_round DESC')->fetchAll(PDO::FETCH_COLUMN);
 
 // Get sessions with matches for filter dropdown
-$sessionsWithMatches = $db->query('SELECT DISTINCT s.id, s.title FROM open_play_sessions s JOIN open_play_matches m ON m.session_id = s.id ORDER BY s.session_date DESC')->fetchAll();
+$sessionsWithMatches = $db->query('SELECT DISTINCT s.id, s.title, s.session_date FROM open_play_sessions s JOIN open_play_matches m ON m.session_id = s.id ORDER BY s.session_date DESC')->fetchAll();
 
 $basePath = '../';
 $pageTitle = 'Open Play Management - Admin';
