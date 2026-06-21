@@ -28,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_session'])) 
         // 🔒 PREVENT DUPLICATE REGISTRATION: Check if user already registered for this session
         $duplicateCheck = $db->prepare(
             'SELECT COUNT(*) FROM open_play_registrations 
-             WHERE user_id = ? AND session_id = ? AND status IN ("pending", "approved")
-             AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
+             WHERE user_id = ? AND session_id = ? AND status IN (\'pending\', \'approved\')
+             AND created_at > NOW() - INTERVAL \'5 minutes\''
         );
         $duplicateCheck->execute([$user['id'], $sessionId]);
         
@@ -165,7 +165,7 @@ $sessions = $db->query(
         (SELECT COUNT(*) FROM open_play_registrations
          WHERE session_id = s.id AND status IN ('pending', 'approved')) AS current_players
      FROM open_play_sessions s
-     WHERE s.status = 'active' AND s.session_date >= CURDATE()
+     WHERE s.status = 'active' AND s.session_date >= CURRENT_DATE
      ORDER BY s.session_date, s.start_time"
 )->fetchAll();
 

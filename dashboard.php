@@ -11,7 +11,7 @@ $upcomingReservations = $db->prepare(
      FROM exclusive_reservations r
      JOIN courts c ON c.id = r.court_id
      LEFT JOIN payments p ON p.reservation_id = r.id
-     WHERE r.user_id = ? AND r.reservation_date >= CURDATE() AND r.status IN (\'pending\', \'approved\')
+     WHERE r.user_id = ? AND r.reservation_date >= CURRENT_DATE AND r.status IN (\'pending\', \'approved\')
      ORDER BY r.reservation_date, r.start_time LIMIT 5'
 );
 $upcomingReservations->execute([$user['id']]);
@@ -22,7 +22,7 @@ $openPlayRegs = $db->prepare(
      FROM open_play_registrations reg
      JOIN open_play_sessions s ON s.id = reg.session_id
      LEFT JOIN payments p ON p.registration_id = reg.id
-     WHERE reg.user_id = ? AND s.session_date >= CURDATE() AND reg.status IN (\'pending\', \'approved\')
+     WHERE reg.user_id = ? AND s.session_date >= CURRENT_DATE AND reg.status IN (\'pending\', \'approved\')
      ORDER BY s.session_date LIMIT 5'
 );
 $openPlayRegs->execute([$user['id']]);

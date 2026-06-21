@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_reservation'])
             $duplicateCheck = $db->prepare(
                 'SELECT COUNT(*) FROM exclusive_reservations 
                  WHERE user_id = ? AND court_id = ? AND reservation_date = ? 
-                 AND start_time = ? AND status IN ("pending", "approved")
-                 AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)'
+                 AND start_time = ? AND status IN (\'pending\', \'approved\')
+                 AND created_at > NOW() - INTERVAL \'5 minutes\''
             );
             $duplicateCheck->execute([$user['id'], $courtId, $date, $startTimeFormatted]);
             

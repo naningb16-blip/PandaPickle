@@ -8,9 +8,9 @@ $period = $_GET['period'] ?? 'daily';
 $type = $_GET['type'] ?? 'csv';
 
 $dateFilter = match ($period) {
-    'weekly' => 'verified_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)',
-    'monthly' => 'verified_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)',
-    default => 'DATE(verified_at) = CURDATE()',
+    'weekly' => 'verified_at >= CURRENT_DATE - INTERVAL \'7 days\'',
+    'monthly' => 'verified_at >= CURRENT_DATE - INTERVAL \'30 days\'',
+    default => 'DATE(verified_at) = CURRENT_DATE',
 };
 
 if ($type !== 'csv') {

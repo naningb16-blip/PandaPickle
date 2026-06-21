@@ -8,7 +8,7 @@ $db = getDB();
 // Get quick stats
 $pendingReservations = (int) $db->query("SELECT COUNT(*) FROM exclusive_reservations WHERE status = 'pending'")->fetchColumn();
 $pendingRegistrations = (int) $db->query("SELECT COUNT(*) FROM open_play_registrations WHERE status = 'pending'")->fetchColumn();
-$activeSessions = (int) $db->query("SELECT COUNT(*) FROM open_play_sessions WHERE status = 'active' AND session_date >= CURDATE()")->fetchColumn();
+$activeSessions = (int) $db->query("SELECT COUNT(*) FROM open_play_sessions WHERE status = 'active' AND session_date >= CURRENT_DATE")->fetchColumn();
 
 $basePath = '../';
 $pageTitle = 'Admin Dashboard';

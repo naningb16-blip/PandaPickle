@@ -10,9 +10,9 @@ $fbPost = null;
 $activeSessions = $db->query(
     'SELECT id, title, session_date, start_time, end_time, max_players, fee_per_player,
         (SELECT COUNT(*) FROM open_play_registrations
-         WHERE session_id = open_play_sessions.id AND status IN ("pending", "approved")) AS current_players
+         WHERE session_id = open_play_sessions.id AND status IN (\'pending\', \'approved\')) AS current_players
      FROM open_play_sessions 
-     WHERE status = "active" AND session_date >= CURDATE()
+     WHERE status = \'active\' AND session_date >= CURRENT_DATE
      ORDER BY session_date, start_time'
 )->fetchAll();
 
