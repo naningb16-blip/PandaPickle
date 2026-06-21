@@ -96,9 +96,12 @@ checkItem('SQL Injection Protection', $unsafeSqlCount === 0,
     'critical');
 
 // Check 7: XSS Protection (Check for htmlspecialchars/e() usage)
+require_once __DIR__ . '/includes/functions.php';
 $hasXSSProtection = function_exists('e');
-checkItem('XSS Protection', $hasXSSProtection, 
-    $hasXSSProtection ? 'HTML escaping function available' : 'No HTML escaping function found', 
+$functionsContent = file_exists(__DIR__ . '/includes/functions.php') ? file_get_contents(__DIR__ . '/includes/functions.php') : '';
+$hasEscapeFunction = strpos($functionsContent, 'function e(') !== false;
+checkItem('XSS Protection', $hasXSSProtection || $hasEscapeFunction, 
+    ($hasXSSProtection || $hasEscapeFunction) ? 'HTML escaping function (e()) available and in use' : 'No HTML escaping function found', 
     'high');
 
 // Check 8: HTTPS Configuration

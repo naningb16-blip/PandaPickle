@@ -1,5 +1,19 @@
 <?php
 
+// Security Configuration - Disable error display in production
+if (getenv('RENDER') || getenv('APP_ENV') === 'production') {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    error_reporting(E_ALL);
+    ini_set('log_errors', '1');
+    ini_set('error_log', __DIR__ . '/../logs/error.log');
+} else {
+    // Development mode - show errors
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+}
+
 // Database configuration - supports both local and production environments
 // For PostgreSQL on Render
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
