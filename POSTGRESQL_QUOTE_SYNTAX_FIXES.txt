@@ -1,0 +1,98 @@
+========================================
+POSTGRESQL QUOTE SYNTAX FIXES
+========================================
+
+ISSUE:
+------
+After fixing SQL function compatibility, encountered errors with PostgreSQL quote syntax:
+
+Error Example:
+  SQLSTATE[42703]: Undefined column: 7 ERROR: column "active" does not exist
+  LINE 1: SELECT * FROM courts WHERE status = "active" ORDER BY court_...
+
+ROOT CAUSE:
+-----------
+In PostgreSQL:
+- Single quotes ('') are for STRING VALUES: WHERE status = 'active'
+- Double quotes ("") are for IDENTIFIERS (table/column names): "my_table"."my_column"
+
+MySQL is more lenient and allows double quotes for both, but PostgreSQL is strict.
+
+FIXES APPLIED:
+--------------
+
+1. **String Literals in SQL Queries** - Changed double quotes to single quotes:
+   
+   ❌ BEFORE: WHERE status = "active"
+   ✅ AFTER:  WHERE status = 'active'
+   
+   ❌ BEFORE: AND status IN ("pending", "approved")
+   ✅ AFTER:  AND status IN ('pending', 'approved')
+   
+   ❌ BEFORE: VALUES (?, "reservation", ?, "paid")
+   ✅ AFTER:  VALUES (?, 'reservation', ?, 'paid')
+
+2. **IF() Function** - Replaced with CASE WHEN (PostgreSQL syntax):
+   
+   ❌ BEFORE: IF(r.user_id IS NULL, "walk-in", "online") as booking_type
+   ✅ AFTER:  CASE WHEN r.user_id IS NULL THEN 'walk-in' ELSE 'online' END as booking_type
+
+3. **RAND() Function** - Replaced with RANDOM() (PostgreSQL syntax):
+   
+   ❌ BEFORE: ORDER BY reg.match_preference DESC, RAND()
+   ✅ AFTER:  ORDER BY reg.match_preference DESC, RANDOM()
+
+FILES FIXED:
+------------
+
+✅ admin/reservations.php
+   - Fixed 5 locations with double-quoted strings
+   - Fixed IF() to CASE WHEN for booking_type column
+
+✅ reservations.php
+   - Fixed 1 location with double-quoted string
+
+✅ open-play.php
+   - Fixed 1 location with double-quoted string
+
+✅ admin/open-play.php
+   - Fixed 9 locations with double-quoted strings
+   - Fixed RAND() to RANDOM()
+
+SUMMARY OF CHANGES:
+-------------------
+Total Files Modified: 4
+Total Quote Fixes: 16
+SQL Function Conversions: 2 (IF → CASE WHEN, RAND → RANDOM)
+
+POSTGRESQL SQL SYNTAX REFERENCE:
+---------------------------------
+
+String Values:     'single quotes'
+Identifiers:       "double quotes" (optional, only needed for case-sensitive or special names)
+Functions:
+  - CASE WHEN condition THEN value ELSE value END
+  - RANDOM() for random ordering
+  - CURRENT_DATE for current date
+  - NOW() - INTERVAL 'X minutes' for date arithmetic
+
+DEPLOYMENT STATUS:
+------------------
+✅ All quote syntax issues fixed
+✅ All MySQL-specific functions converted
+✅ Changes committed to Git (commit: d3fc65e)
+✅ Changes pushed to GitHub (main branch)
+✅ Ready for Render to redeploy
+
+NEXT STEPS:
+-----------
+1. Go to Render Dashboard
+2. Verify branch is set to 'main' (not 'master')
+3. Click "Manual Deploy" → "Deploy latest commit"
+4. Monitor deployment logs
+5. Test the application
+
+The application should now work correctly with PostgreSQL on Render!
+
+Date: 2026-06-21
+Status: COMPLETE ✅
