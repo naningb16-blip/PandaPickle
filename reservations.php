@@ -194,15 +194,15 @@ require_once __DIR__ . '/includes/header.php';
         <div class="card">
             <div class="card-header"><h3>Exclusive Court Reservation</h3></div>
             <div class="card-body">
-                <p style="margin-bottom: 1rem; line-height: 1.6;">
+                <p style="margin-bottom: 1rem; line-height: 1.6; color: #059669; font-weight: 600;">
                     Select your date, start time, and number of hours. The system automatically calculates your end time and total amount.
                 </p>
                 <ul style="list-style: none; padding-left: 0; line-height: 1.8;">
-                    <li style="margin-bottom: 0.5rem;">✓ Automatic overlap prevention</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Admin approval workflow</li>
-                    <li style="margin-bottom: 0.5rem;">✓ 70% cashless downpayment for advance booking</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Cancelation has no Refunds</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Pay Via cash or cashless</li>
+                    <li style="margin-bottom: 0.5rem;">✅ Automatic overlap prevention</li>
+                    <li style="margin-bottom: 0.5rem;">✅ Admin approval workflow</li>
+                    <li style="margin-bottom: 0.5rem;">✅ 70% cashless downpayment for advance booking</li>
+                    <li style="margin-bottom: 0.5rem;">✅ Cancelation has no Refunds</li>
+                    <li style="margin-bottom: 0.5rem;">✅ Pay Via cash or cashless</li>
                 </ul>
                 <p class="mt-2"><strong>Example:</strong></p>
                 <p class="text-muted">2 hours = PHP 500 &bull; 3 hours = PHP 750</p>
