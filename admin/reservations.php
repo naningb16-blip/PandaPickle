@@ -7,7 +7,7 @@ $db = getDB();
 $admin = getCurrentUser();
 
 // Get all courts for the form
-$courts = $db->query('SELECT * FROM courts WHERE status = "active" ORDER BY court_name')->fetchAll();
+$courts = $db->query('SELECT * FROM courts WHERE status = \'active\' ORDER BY court_name')->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle walk-in reservation creation
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $checkStmt = $db->prepare(
                     'SELECT COUNT(*) FROM exclusive_reservations 
                      WHERE court_id = ? AND reservation_date = ? 
-                     AND status IN ("pending", "approved")
+                     AND status IN (\'pending\', \'approved\')
                      AND (
                          (start_time < ? AND end_time > ?) OR
                          (start_time < ? AND end_time > ?) OR
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $db->prepare(
                         'INSERT INTO exclusive_reservations 
                          (reservation_code, user_id, customer_name, customer_phone, court_id, reservation_date, start_time, end_time, hours_reserved, hourly_rate, total_amount, payment_method, status)
-                         VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "approved")'
+                         VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \'approved\')'
                     );
                     $stmt->execute([
                         $reservationCode, $customerName, $customerPhone, $courtId, $reservationDate, 
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Create payment record (marked as paid for walk-in)
                     $db->prepare(
                         'INSERT INTO payments (reservation_id, payment_type, amount, payment_status) 
-                         VALUES (?, "reservation", ?, "paid")'
+                         VALUES (?, \'reservation\', ?, \'paid\')'
                     )->execute([$resId, $totalAmount]);
                     
                     flash('success', "Walk-in reservation created for {$customerName}. Code: {$reservationCode}");
@@ -138,7 +138,7 @@ $reservations = $db->query(
             u.email, 
             c.court_name, 
             p.payment_status,
-            IF(r.user_id IS NULL, "walk-in", "online") as booking_type
+            CASE WHEN r.user_id IS NULL THEN \'walk-in\' ELSE \'online\' END as booking_type
      FROM exclusive_reservations r
      LEFT JOIN users u ON u.id = r.user_id
      JOIN courts c ON c.id = r.court_id

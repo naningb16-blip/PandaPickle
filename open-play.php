@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_session'])) 
     $sessionId = (int) ($_POST['session_id'] ?? 0);
     $matchPreference = $_POST['match_preference'] ?? 'random';
 
-    $stmt = $db->prepare("SELECT * FROM open_play_sessions WHERE id = ? AND status = 'active'");
+    $stmt = $db->prepare('SELECT * FROM open_play_sessions WHERE id = ? AND status = \'active\'');
     $stmt->execute([$sessionId]);
     $session = $stmt->fetch();
 

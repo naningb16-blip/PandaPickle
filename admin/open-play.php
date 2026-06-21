@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($errors)) {
             // Get session details
-            $sessionStmt = $db->prepare("SELECT * FROM open_play_sessions WHERE id = ? AND status = 'active'");
+            $sessionStmt = $db->prepare('SELECT * FROM open_play_sessions WHERE id = ? AND status = \'active\'');
             $sessionStmt->execute([$sessionId]);
             $session = $sessionStmt->fetch();
             
@@ -43,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Session not found or no longer available.';
             } else {
                 $countStmt = $db->prepare(
-                    "SELECT COUNT(*) FROM open_play_registrations 
-                     WHERE session_id = ? AND status IN ('pending', 'approved')"
+                    'SELECT COUNT(*) FROM open_play_registrations 
+                     WHERE session_id = ? AND status IN (\'pending\', \'approved\')'
                 );
                 $countStmt->execute([$sessionId]);
                 $currentPlayers = (int) $countStmt->fetchColumn();
@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['cancel_session'])) {
-        $db->prepare("UPDATE open_play_sessions SET status = 'cancelled' WHERE id = ?")
+        $db->prepare('UPDATE open_play_sessions SET status = \'cancelled\' WHERE id = ?')
             ->execute([(int) $_POST['session_id']]);
         flash('success', 'Session cancelled.');
         header('Location: open-play.php');
@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['finish_session'])) {
-        $db->prepare("UPDATE open_play_sessions SET status = 'completed' WHERE id = ?")
+        $db->prepare('UPDATE open_play_sessions SET status = \'completed\' WHERE id = ?')
             ->execute([(int) $_POST['session_id']]);
         flash('success', 'Session marked as completed.');
         header('Location: open-play.php');
@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$paymentData || $paymentData['payment_status'] !== 'paid') {
             flash('error', 'Cannot approve registration. Payment must be marked as "paid" first.');
         } else {
-            $db->prepare("UPDATE open_play_registrations SET status = 'approved' WHERE id = ?")
+            $db->prepare('UPDATE open_play_registrations SET status = \'approved\' WHERE id = ?')
                 ->execute([$regId]);
             flash('success', 'Registration approved.');
         }
@@ -204,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['reject_registration'])) {
-        $db->prepare("UPDATE open_play_registrations SET status = 'rejected' WHERE id = ?")
+        $db->prepare('UPDATE open_play_registrations SET status = \'rejected\' WHERE id = ?')
             ->execute([(int) $_POST['registration_id']]);
         flash('success', 'Registration rejected.');
         header('Location: open-play.php');
@@ -213,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($_POST['finish_match'])) {
         $matchId = (int) $_POST['match_id'];
-        $db->prepare("UPDATE open_play_matches SET match_status = 'completed' WHERE id = ?")
+        $db->prepare('UPDATE open_play_matches SET match_status = \'completed\' WHERE id = ?')
             ->execute([$matchId]);
         flash('success', 'Match marked as completed.');
         header('Location: open-play.php');
@@ -222,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($_POST['reset_match'])) {
         $matchId = (int) $_POST['match_id'];
-        $db->prepare("UPDATE open_play_matches SET match_status = 'pending' WHERE id = ?")
+        $db->prepare('UPDATE open_play_matches SET match_status = \'pending\' WHERE id = ?')
             ->execute([$matchId]);
         flash('success', 'Match reset to pending.');
         header('Location: open-play.php');
@@ -239,15 +239,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Get approved registrations with friend group info
         $regsStmt = $db->prepare(
-            "SELECT reg.id, reg.match_preference, reg.friend_group FROM open_play_registrations reg
-             WHERE reg.session_id = ? AND reg.status = 'approved'
+            'SELECT reg.id, reg.match_preference, reg.friend_group FROM open_play_registrations reg
+             WHERE reg.session_id = ? AND reg.status = \'approved\'
              AND reg.id NOT IN (
-                 SELECT player1_reg_id FROM open_play_matches WHERE session_id = ? AND match_round = ? AND match_status = 'completed'
-                 UNION SELECT player2_reg_id FROM open_play_matches WHERE session_id = ? AND match_round = ? AND match_status = 'completed'
-                 UNION SELECT player3_reg_id FROM open_play_matches WHERE session_id = ? AND match_round = ? AND match_status = 'completed'
-                 UNION SELECT player4_reg_id FROM open_play_matches WHERE session_id = ? AND match_round = ? AND match_status = 'completed'
+                 SELECT player1_reg_id FROM open_play_matches WHERE session_id = ? AND match_round = ? AND match_status = \'completed\'
+                 UNION SELECT player2_reg_id FROM open_play_matches WHERE session_id = ? AND match_round = ? AND match_status = \'completed\'
+                 UNION SELECT player3_reg_id FROM open_play_matches WHERE session_id = ? AND match_round = ? AND match_status = \'completed\'
+                 UNION SELECT player4_reg_id FROM open_play_matches WHERE session_id = ? AND match_round = ? AND match_status = \'completed\'
              )
-             ORDER BY reg.match_preference DESC, reg.friend_group, RAND()"
+             ORDER BY reg.match_preference DESC, reg.friend_group, RANDOM()'
         );
         $regsStmt->execute([$sessionId, $sessionId, $nextRound - 1, $sessionId, $nextRound - 1, $sessionId, $nextRound - 1, $sessionId, $nextRound - 1]);
         $registrations = $regsStmt->fetchAll(PDO::FETCH_ASSOC);

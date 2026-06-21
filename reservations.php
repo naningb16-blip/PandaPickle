@@ -14,7 +14,7 @@ $user = getCurrentUser();
 $db = getDB();
 $error = '';
 
-$courts = $db->query("SELECT * FROM courts WHERE status = 'active' ORDER BY court_name")->fetchAll();
+$courts = $db->query('SELECT * FROM courts WHERE status = \'active\' ORDER BY court_name')->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_reservation'])) {
     $courtId = (int) ($_POST['court_id'] ?? 0);
