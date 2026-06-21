@@ -1,0 +1,177 @@
+========================================
+RENDER DEPLOYMENT - FINAL STEPS
+========================================
+
+✅ ALL POSTGRESQL FIXES COMPLETE!
+----------------------------------
+
+The following issues have been fixed and pushed to GitHub (main branch):
+
+1. ✅ MySQL-specific SQL functions → PostgreSQL equivalents
+   - CURDATE() → CURRENT_DATE
+   - DATE_SUB(NOW(), INTERVAL X) → NOW() - INTERVAL 'X'
+   - NOW() (works in both)
+
+2. ✅ Quote syntax for PostgreSQL
+   - Double quotes ("") → Single quotes ('') for string values
+   - IF() → CASE WHEN for conditional expressions
+   - RAND() → RANDOM() for random ordering
+
+3. ✅ Database configuration
+   - Using pgsql: DSN instead of mysql:
+   - Port 5432 specified
+   - Correct PostgreSQL extensions in Dockerfile
+
+FILES MODIFIED: 11 files
+COMMITS PUSHED: 5 commits
+LATEST COMMIT: b71a703
+
+========================================
+YOUR NEXT STEPS ON RENDER
+========================================
+
+STEP 1: VERIFY RENDER SETTINGS
+-------------------------------
+1. Go to https://dashboard.render.com
+2. Open your web service: "pandapickle-web"
+3. Click "Settings" in the left sidebar
+4. Verify these settings:
+
+   ✓ Branch: main (NOT master!)
+   ✓ Region: Oregon (or your preferred region)
+   ✓ Build Command: (should use Dockerfile)
+   ✓ Auto-Deploy: Yes (recommended)
+
+5. Scroll to "Environment Variables" section
+6. Verify these are set correctly:
+
+   DB_HOST = dpg-d8ro161o3t8c73ebfv20-a.oregon-postgres.render.com
+   DB_PORT = 5432
+   DB_NAME = pandapickle
+   DB_USER = pandapickle_user
+   DB_PASSWORD = T4Uvrgb7y4jxfFUELsETDkvA3XJFuMhr
+   APP_ENV = production
+
+   ⚠️ If any are missing, add them!
+
+STEP 2: TRIGGER DEPLOYMENT
+---------------------------
+1. Click "Manual Deploy" in the top right
+2. Select "Clear build cache & deploy"
+3. Click "Yes, deploy"
+4. Wait for deployment (usually 5-10 minutes)
+
+STEP 3: MONITOR DEPLOYMENT LOGS
+--------------------------------
+Watch the logs during deployment:
+1. Look for "Building..." then "Starting..."
+2. Should see Docker building PHP with PostgreSQL
+3. Should end with "Your service is live 🎉"
+
+STEP 4: IMPORT DATABASE SCHEMA (IF NOT DONE)
+---------------------------------------------
+Only do this if you haven't imported the schema yet:
+
+1. Open TablePlus
+2. Connect to your Render PostgreSQL database:
+   - Host: dpg-d8ro161o3t8c73ebfv20-a.oregon-postgres.render.com
+   - Port: 5432
+   - User: pandapickle_user
+   - Password: T4Uvrgb7y4jxfFUELsETDkvA3XJFuMhr
+   - Database: pandapickle
+
+3. Open database/schema.sql from your project
+4. Copy ALL the SQL
+5. Paste and execute in TablePlus
+6. Verify 8 tables are created:
+   - users
+   - courts
+   - exclusive_reservations
+   - open_play_sessions
+   - open_play_registrations
+   - open_play_matches
+   - payments
+   - password_resets
+
+STEP 5: CREATE ADMIN ACCOUNT
+-----------------------------
+After successful deployment:
+
+1. Visit your Render URL: https://pandapickle-web.onrender.com
+2. Go to: https://pandapickle-web.onrender.com/setup-admin.php
+3. Fill in admin details:
+   - Full Name: Your Name
+   - Email: admin@yourdomain.com
+   - Phone: Your phone
+   - Password: Strong password (min 6 chars)
+   - Confirm Password: Same password
+
+4. Click "Create Admin Account"
+5. **IMMEDIATELY DELETE setup-admin.php** from your server!
+   (You can delete it from your local project and push to GitHub,
+    then redeploy, or use Render Shell to delete it)
+
+STEP 6: TEST YOUR APPLICATION
+------------------------------
+1. Visit: https://pandapickle-web.onrender.com/login.php
+2. Login with your admin credentials
+3. Test these features:
+   - Dashboard loads
+   - Admin panel accessible
+   - Create court reservation
+   - Create open play session
+   - Register for open play
+
+========================================
+TROUBLESHOOTING
+========================================
+
+If you see errors after deployment:
+
+ERROR: "Connection timeout"
+→ Check environment variables (DB_HOST, DB_PORT, etc.)
+→ Verify PostgreSQL database is running on Render
+
+ERROR: "Table doesn't exist"
+→ Import database/schema.sql using TablePlus
+
+ERROR: "Column doesn't exist"
+→ Make sure you're deploying from 'main' branch (not 'master')
+→ Clear build cache and redeploy
+
+ERROR: Still seeing MySQL errors
+→ Check which branch is deployed (Settings → Branch)
+→ Should be 'main', not 'master'
+
+========================================
+ADDITIONAL FEATURES CREATED
+========================================
+
+✅ setup-admin.php - First-time admin registration
+✅ admin/register-admin.php - Create additional admins
+✅ Walk-in reservations - Admin can create reservations
+✅ Walk-in open play - Admin can register walk-in customers
+✅ PostgreSQL compatibility - Complete conversion from MySQL
+
+========================================
+SUCCESS CRITERIA
+========================================
+
+Your deployment is successful when:
+
+✅ You can access the login page without errors
+✅ You can log in as admin
+✅ Dashboard displays correctly
+✅ You can create reservations
+✅ You can create open play sessions
+✅ No SQL function errors appear
+✅ No quote syntax errors appear
+
+========================================
+
+🎉 GOOD LUCK WITH YOUR DEPLOYMENT! 🎉
+
+If you encounter any issues, check the Render logs for specific error messages.
+
+Date: 2026-06-21
+Documentation Version: 1.0
