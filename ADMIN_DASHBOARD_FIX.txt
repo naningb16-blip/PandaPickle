@@ -1,0 +1,90 @@
+==============================================
+ADMIN DASHBOARD REDIRECT FIX
+==============================================
+
+Date: June 21, 2026
+Status: ✅ COMPLETE
+
+PROBLEM:
+--------
+Admins were accessing the same dashboard as regular users (dashboard.php), 
+which showed customer-specific information like their personal reservations 
+and open play registrations. This was confusing since admins should see 
+system-wide statistics and management tools.
+
+SOLUTION:
+---------
+Implemented automatic redirection so admins always see the admin dashboard 
+(admin/index.php) and customers always see the customer dashboard (dashboard.php).
+
+CHANGES MADE:
+-------------
+
+1. ✅ login.php
+   - After successful login, checks user role
+   - Admins redirected to: admin/index.php
+   - Customers redirected to: dashboard.php
+
+2. ✅ dashboard.php
+   - Added check at the top of the file
+   - If logged-in user is admin, immediately redirect to admin/index.php
+   - Prevents admins from manually accessing customer dashboard
+
+3. ✅ includes/auth.php
+   - Updated requireAdmin() redirect path
+   - Non-admin users trying to access admin pages redirected to ../dashboard.php
+   - Fixed relative path issue (was missing ../)
+
+BEHAVIOR NOW:
+-------------
+✅ Admin logs in → Goes to admin/index.php (admin dashboard with statistics)
+✅ Customer logs in → Goes to dashboard.php (customer dashboard with their bookings)
+✅ Admin tries to visit dashboard.php → Automatically redirected to admin/index.php
+✅ Customer tries to visit admin/* → Denied and redirected to dashboard.php with error
+
+USER EXPERIENCE:
+----------------
+ADMINS see:
+- Total Reservations, Walk-ins, Revenue statistics
+- Upcoming Reservations table
+- Recent Reservations list
+- Access to: Reservations, Open Play, Users, Payments, Reports, Payment Settings
+
+CUSTOMERS see:
+- Their personal upcoming reservations
+- Their open play registrations with "Pay Now" buttons
+- Their booking history
+- Access to: Reservations, Open Play, Profile, Logout
+
+NAVIGATION:
+-----------
+- Admin panel has its own sidebar (admin/includes/sidebar.php)
+- Customer pages use main navigation (includes/header.php)
+- Both user types have appropriate menu items for their role
+
+SECURITY:
+---------
+✅ Role-based access control enforced
+✅ Automatic redirects prevent unauthorized access
+✅ Each dashboard shows only relevant information for that role
+✅ CSRF protection applied to all forms (previous task)
+
+TESTING CHECKLIST:
+------------------
+[ ] Login as admin → Should see admin/index.php with statistics
+[ ] Login as customer → Should see dashboard.php with personal bookings
+[ ] As admin, try to visit /dashboard.php → Should redirect to admin/index.php
+[ ] As customer, try to visit /admin/index.php → Should redirect to dashboard.php with error
+[ ] Logout and login as different role → Should see correct dashboard
+
+FILES MODIFIED:
+---------------
+✅ login.php - Added role-based redirect after login
+✅ dashboard.php - Added admin redirect check
+✅ includes/auth.php - Fixed requireAdmin() redirect path
+
+NO DATABASE CHANGES NEEDED
+NO MIGRATION FILES NEEDED
+NO RENDER CONFIGURATION CHANGES NEEDED
+
+==============================================
