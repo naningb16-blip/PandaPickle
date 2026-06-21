@@ -226,20 +226,20 @@ require_once __DIR__ . '/includes/header.php';
                                     
                                     <div style="display:flex;gap:1rem;align-items:center;font-size:0.9rem;flex-wrap:wrap;margin-bottom:0.5rem;">
                                         <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;">
-                                            <input type="radio" name="match_preference" value="random" checked onclick="document.getElementById('random_fields_<?= $s['id'] ?>').style.display='flex'; document.getElementById('friends_fields_<?= $s['id'] ?>').style.display='none';">
+                                            <input type="radio" name="match_preference" value="random" checked onclick="toggleMatchMode_<?= $s['id'] ?>('random')">
                                             <span>Random Match (PHP 100)</span>
                                         </label>
                                         <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;">
-                                            <input type="radio" name="match_preference" value="friends" onclick="document.getElementById('random_fields_<?= $s['id'] ?>').style.display='none'; document.getElementById('friends_fields_<?= $s['id'] ?>').style.display='flex';">
+                                            <input type="radio" name="match_preference" value="friends" onclick="toggleMatchMode_<?= $s['id'] ?>('friends')">
                                             <span>Play with Friends (PHP 200 - all 4 players)</span>
                                         </label>
                                     </div>
                                     
                                     <!-- Random Match Fields (default) -->
                                     <div id="random_fields_<?= $s['id'] ?>" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                                        <input type="text" name="user_name" placeholder="Your Name" required style="padding:0.4rem;min-width:150px;">
-                                        <input type="text" name="partner_name" placeholder="Partner's Name" required style="padding:0.4rem;min-width:150px;">
-                                        <select name="payment_method" required style="padding:0.4rem;">
+                                        <input type="text" name="user_name" id="user_name_<?= $s['id'] ?>" placeholder="Your Name" required style="padding:0.4rem;min-width:150px;">
+                                        <input type="text" name="partner_name" id="partner_name_<?= $s['id'] ?>" placeholder="Partner's Name" required style="padding:0.4rem;min-width:150px;">
+                                        <select name="payment_method" id="payment_method_<?= $s['id'] ?>" required style="padding:0.4rem;">
                                             <option value="cash">Cash</option>
                                             <option value="cashless">Cashless</option>
                                         </select>
@@ -249,14 +249,14 @@ require_once __DIR__ . '/includes/header.php';
                                     <div id="friends_fields_<?= $s['id'] ?>" style="display:none;gap:0.5rem;flex-wrap:wrap;flex-direction:column;border:2px solid #059669;padding:1rem;border-radius:8px;background:#f0fdf4;">
                                         <strong style="color:#059669;">Register All 4 Players (2 Teams):</strong>
                                         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                                            <input type="text" name="team1_player1" placeholder="Your Name" style="padding:0.4rem;min-width:150px;">
-                                            <input type="text" name="team1_player2" placeholder="Your Partner" style="padding:0.4rem;min-width:150px;">
+                                            <input type="text" name="team1_player1" id="team1_player1_<?= $s['id'] ?>" placeholder="Your Name" style="padding:0.4rem;min-width:150px;">
+                                            <input type="text" name="team1_player2" id="team1_player2_<?= $s['id'] ?>" placeholder="Your Partner" style="padding:0.4rem;min-width:150px;">
                                         </div>
                                         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                                            <input type="text" name="team2_player1" placeholder="Friend 1 Name" style="padding:0.4rem;min-width:150px;">
-                                            <input type="text" name="team2_player2" placeholder="Friend 2 Name" style="padding:0.4rem;min-width:150px;">
+                                            <input type="text" name="team2_player1" id="team2_player1_<?= $s['id'] ?>" placeholder="Friend 1 Name" style="padding:0.4rem;min-width:150px;">
+                                            <input type="text" name="team2_player2" id="team2_player2_<?= $s['id'] ?>" placeholder="Friend 2 Name" style="padding:0.4rem;min-width:150px;">
                                         </div>
-                                        <select name="payment_method_friends" style="padding:0.4rem;">
+                                        <select name="payment_method_friends" id="payment_method_friends_<?= $s['id'] ?>" style="padding:0.4rem;">
                                             <option value="cash">Cash</option>
                                             <option value="cashless">Cashless</option>
                                         </select>
@@ -265,6 +265,43 @@ require_once __DIR__ . '/includes/header.php';
                                             ✅ You'll play together immediately - no waiting for random matching!
                                         </p>
                                     </div>
+                                    
+                                    <script>
+                                    function toggleMatchMode_<?= $s['id'] ?>(mode) {
+                                        const randomFields = document.getElementById('random_fields_<?= $s['id'] ?>');
+                                        const friendsFields = document.getElementById('friends_fields_<?= $s['id'] ?>');
+                                        
+                                        if (mode === 'random') {
+                                            randomFields.style.display = 'flex';
+                                            friendsFields.style.display = 'none';
+                                            
+                                            // Set required for random fields
+                                            document.getElementById('user_name_<?= $s['id'] ?>').required = true;
+                                            document.getElementById('partner_name_<?= $s['id'] ?>').required = true;
+                                            document.getElementById('payment_method_<?= $s['id'] ?>').required = true;
+                                            
+                                            // Remove required from friends fields
+                                            document.getElementById('team1_player1_<?= $s['id'] ?>').required = false;
+                                            document.getElementById('team1_player2_<?= $s['id'] ?>').required = false;
+                                            document.getElementById('team2_player1_<?= $s['id'] ?>').required = false;
+                                            document.getElementById('team2_player2_<?= $s['id'] ?>').required = false;
+                                        } else {
+                                            randomFields.style.display = 'none';
+                                            friendsFields.style.display = 'flex';
+                                            
+                                            // Remove required from random fields
+                                            document.getElementById('user_name_<?= $s['id'] ?>').required = false;
+                                            document.getElementById('partner_name_<?= $s['id'] ?>').required = false;
+                                            document.getElementById('payment_method_<?= $s['id'] ?>').required = false;
+                                            
+                                            // Set required for friends fields
+                                            document.getElementById('team1_player1_<?= $s['id'] ?>').required = true;
+                                            document.getElementById('team1_player2_<?= $s['id'] ?>').required = true;
+                                            document.getElementById('team2_player1_<?= $s['id'] ?>').required = true;
+                                            document.getElementById('team2_player2_<?= $s['id'] ?>').required = true;
+                                        }
+                                    }
+                                    </script>
                                     
                                     <button type="submit" name="register_session" class="btn btn-sm btn-primary">Register</button>
                                 </form>
