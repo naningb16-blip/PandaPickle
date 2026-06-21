@@ -324,7 +324,7 @@ require_once __DIR__ . '/includes/header.php';
                 <thead>
                     <tr>
                         <th>Session</th><th>Date</th><th>Team Players</th><th>Payment Method</th><th>Total</th>
-                        <th>Payment Status</th><th>Status</th>
+                        <th>Payment Status</th><th>Status</th><th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -341,6 +341,15 @@ require_once __DIR__ . '/includes/header.php';
                         <td><?= e(formatMoney((float) $reg['total_amount'])) ?></td>
                         <td><span class="badge <?= statusBadgeClass($reg['payment_status'] ?? 'unpaid') ?>"><?= e($reg['payment_status'] ?? 'unpaid') ?></span></td>
                         <td><span class="badge <?= statusBadgeClass($reg['status']) ?>"><?= e($reg['status']) ?></span></td>
+                        <td>
+                            <?php if (($reg['payment_status'] ?? 'unpaid') === 'unpaid'): ?>
+                                <a href="payment-info.php?registration_id=<?= (int)$reg['id'] ?>" class="btn btn-sm btn-success">
+                                    💳 Pay Now
+                                </a>
+                            <?php else: ?>
+                                <span class="text-muted">—</span>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
