@@ -15,6 +15,7 @@ $db = getDB();
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_session'])) {
+    checkCSRF();
     $sessionId = (int) ($_POST['session_id'] ?? 0);
     $matchPreference = $_POST['match_preference'] ?? 'random';
 
@@ -222,6 +223,7 @@ require_once __DIR__ . '/includes/header.php';
                             <td>
                                 <?php if ($available > 0): ?>
                                 <form method="POST" style="display:flex;gap:0.5rem;align-items:flex-start;flex-wrap:wrap;flex-direction:column;">
+                                    <?= csrfField() ?>
                                     <input type="hidden" name="session_id" value="<?= (int) $s['id'] ?>">
                                     
                                     <div style="display:flex;gap:1rem;align-items:center;font-size:0.9rem;flex-wrap:wrap;margin-bottom:0.5rem;">

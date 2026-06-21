@@ -10,6 +10,7 @@ $registrationId = $_GET['registration_id'] ?? 0;
 
 // Handle receipt upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
+    checkCSRF();
     $uploadError = null;
     $file = $_FILES['receipt'];
     
@@ -286,6 +287,7 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     <?php else: ?>
                         <form method="POST" enctype="multipart/form-data" style="margin-top: 1rem;">
+                            <?= csrfField() ?>
                             <div class="form-group">
                                 <label for="receipt" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                     Select Receipt Image (JPG, PNG, GIF - Max 5MB)

@@ -7,6 +7,7 @@ $db = getDB();
 $admin = getCurrentUser();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCSRF();
     $paymentId = (int) ($_POST['payment_id'] ?? 0);
     $action = $_POST['action'] ?? '';
 
@@ -86,6 +87,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <td>
                                 <?php if ($p['payment_status'] === 'pending_verification'): ?>
                                 <form method="POST" style="display:inline;">
+                                    <?= csrfField() ?>
                                     <input type="hidden" name="payment_id" value="<?= (int) $p['id'] ?>">
                                     <button type="submit" name="action" value="paid" class="btn btn-sm btn-primary">Verify Paid</button>
                                     <button type="submit" name="action" value="rejected" class="btn btn-sm btn-danger">Reject</button>

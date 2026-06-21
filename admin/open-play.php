@@ -17,6 +17,7 @@ $activeSessions = $db->query(
 )->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCSRF();
     // Handle walk-in registration
     if (isset($_POST['create_walkin'])) {
         $sessionId = (int) ($_POST['session_id'] ?? 0);
@@ -434,6 +435,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="card-header"><h3>Create Open Play Session</h3></div>
                 <div class="card-body">
                     <form method="POST">
+                        <?= csrfField() ?>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="title">Title</label>
@@ -482,6 +484,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="card-header"><h3>🆕 Walk-in Player Registration</h3></div>
                 <div class="card-body">
                     <form method="POST">
+                        <?= csrfField() ?>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="walkin_session_id">Session *</label>
@@ -597,6 +600,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td>
                                     <?php if ($s['status'] === 'active'): ?>
                                     <form method="POST" style="display:inline-flex;gap:0.5rem;flex-direction:column;">
+                                        <?= csrfField() ?>
                                         <input type="hidden" name="session_id" value="<?= (int) $s['id'] ?>">
                                         <button type="submit" name="generate_matches" class="btn btn-sm btn-primary">Generate Matches</button>
                                         <button type="submit" name="finish_session" class="btn btn-sm btn-success" onclick="return confirm('Mark this session as completed? This will close the session.')">Finish Session</button>
@@ -652,6 +656,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td>
                                     <?php if ($reg['status'] === 'pending'): ?>
                                         <form method="POST" style="display:inline;">
+                                            <?= csrfField() ?>
                                             <input type="hidden" name="registration_id" value="<?= (int) $reg['id'] ?>">
                                             <select name="payment_status" class="btn btn-sm <?= ($reg['payment_status'] ?? 'unpaid') === 'paid' ? 'btn-success' : 'btn-warning' ?>">
                                                 <option value="unpaid" <?= ($reg['payment_status'] ?? 'unpaid') === 'unpaid' ? 'selected' : '' ?>>Unpaid</option>
@@ -667,6 +672,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td>
                                     <?php if ($reg['status'] === 'pending'): ?>
                                     <form method="POST" style="display:inline;">
+                                        <?= csrfField() ?>
                                         <input type="hidden" name="registration_id" value="<?= (int) $reg['id'] ?>">
                                         <?php if (($reg['payment_status'] ?? '') === 'paid'): ?>
                                             <button type="submit" name="approve_registration" class="btn btn-sm btn-primary">Approve</button>
@@ -821,11 +827,13 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td>
                                     <?php if ($m['match_status'] !== 'completed'): ?>
                                         <form method="POST" style="display:inline;">
+                                            <?= csrfField() ?>
                                             <input type="hidden" name="match_id" value="<?= (int) $m['id'] ?>">
                                             <button type="submit" name="finish_match" class="btn btn-sm btn-success">Finish</button>
                                         </form>
                                     <?php else: ?>
                                         <form method="POST" style="display:inline;">
+                                            <?= csrfField() ?>
                                             <input type="hidden" name="match_id" value="<?= (int) $m['id'] ?>">
                                             <button type="submit" name="reset_match" class="btn btn-sm btn-secondary">Reset</button>
                                         </form>

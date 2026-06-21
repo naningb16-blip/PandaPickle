@@ -167,3 +167,50 @@ function uploadPaymentProof(array $file): array
 
     return ['success' => true, 'path' => UPLOAD_URL . $filename];
 }
+
+/**
+ * Generate CSRF token
+ */
+function generateCSRFToken(): string
+{
+    startSession();
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Verify CSRF token
+ */
+function verifyCSRFToken(?string $token): bool
+{
+    startSession();
+    if (!isset($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
+}
+
+/**
+ * Output CSRF token input field
+ */
+function csrfField(): string
+{
+    $token = generateCSRFToken();
+    return '<input type="hidden" name="csrf_token" value="' . e($token) . '">';
+}
+
+/**
+ * Check CSRF token from POST request
+ */
+function checkCSRF(): void
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $token = $_POST['csrf_token'] ?? $_GET['csrf_token'] ?? '';
+        if (!verifyCSRFToken($token)) {
+            http_response_code(403);
+            die('CSRF token validation failed. Please refresh the page and try again.');
+        }
+    }
+}

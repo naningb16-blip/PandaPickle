@@ -6,6 +6,7 @@ requireAdmin();
 $db = getDB();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCSRF();
     $updates = $_POST['settings'] ?? [];
     
     try {
@@ -58,6 +59,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <form method="POST">
+                        <?= csrfField() ?>
                         <?php foreach ($settings as $setting): ?>
                             <div class="form-group">
                                 <label for="<?= e($setting['setting_key']) ?>">

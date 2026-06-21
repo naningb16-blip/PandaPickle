@@ -8,6 +8,7 @@ if (isLoggedIn()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCSRF();
     $result = loginUser($_POST['email'] ?? '', $_POST['password'] ?? '');
     if ($result['success']) {
         flash('success', $result['message']);
@@ -31,6 +32,7 @@ require_once __DIR__ . '/includes/header.php';
             <?php endif; ?>
 
             <form method="POST">
+                <?= csrfField() ?>
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" value="<?= e($_POST['email'] ?? '') ?>" required autofocus>

@@ -17,6 +17,7 @@ $error = '';
 $courts = $db->query('SELECT * FROM courts WHERE status = \'active\' ORDER BY court_name')->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_reservation'])) {
+    checkCSRF();
     $courtId = (int) ($_POST['court_id'] ?? 0);
     $date = $_POST['reservation_date'] ?? '';
     $startTime = $_POST['start_time'] ?? '';
@@ -147,6 +148,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="card-header"><h3>New Reservation</h3></div>
             <div class="card-body">
                 <form method="POST">
+                    <?= csrfField() ?>
                     <div class="form-group">
                         <label for="court_id">Court</label>
                         <select id="court_id" name="court_id" required>

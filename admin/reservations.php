@@ -10,6 +10,7 @@ $admin = getCurrentUser();
 $courts = $db->query('SELECT * FROM courts WHERE status = \'active\' ORDER BY court_name')->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCSRF();
     // Handle walk-in reservation creation
     if (isset($_POST['create_walkin'])) {
         $customerName = trim($_POST['customer_name'] ?? '');
@@ -194,6 +195,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="card-header"><h3>🆕 Create Walk-in Reservation</h3></div>
                 <div class="card-body">
                     <form method="POST">
+                        <?= csrfField() ?>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="customer_name">Customer Name *</label>
@@ -287,6 +289,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <td>
                                 <?php if ($r['status'] === 'pending'): ?>
                                     <form method="POST" style="display:inline;">
+                                        <?= csrfField() ?>
                                         <input type="hidden" name="reservation_id" value="<?= (int) $r['id'] ?>">
                                         <select name="payment_status" class="btn btn-sm <?= ($r['payment_status'] ?? 'unpaid') === 'paid' ? 'btn-success' : 'btn-warning' ?>">
                                             <option value="unpaid" <?= ($r['payment_status'] ?? 'unpaid') === 'unpaid' ? 'selected' : '' ?>>Unpaid</option>
@@ -325,6 +328,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             <?php endif; ?>
                                         </div>
                                         <form method="POST" style="display:inline;" class="start-form">
+                                            <?= csrfField() ?>
                                             <input type="hidden" name="reservation_id" value="<?= (int) $r['id'] ?>">
                                             <button type="submit" name="action" value="start_timer" 
                                                     class="btn btn-sm btn-success start-btn"
@@ -333,6 +337,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             </button>
                                         </form>
                                         <form method="POST" style="display:inline;" class="stop-form">
+                                            <?= csrfField() ?>
                                             <input type="hidden" name="reservation_id" value="<?= (int) $r['id'] ?>">
                                             <button type="submit" name="action" value="stop_timer" 
                                                     class="btn btn-sm btn-danger stop-btn"
@@ -348,6 +353,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <td>
                                 <?php if ($r['status'] === 'pending'): ?>
                                 <form method="POST" style="display:inline;">
+                                    <?= csrfField() ?>
                                     <input type="hidden" name="reservation_id" value="<?= (int) $r['id'] ?>">
                                     <?php if (($r['payment_status'] ?? '') === 'paid'): ?>
                                         <button type="submit" name="action" value="approved" class="btn btn-sm btn-primary">Approve</button>
@@ -358,6 +364,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </form>
                                 <?php elseif ($r['status'] === 'approved'): ?>
                                 <form method="POST" style="display:inline;">
+                                    <?= csrfField() ?>
                                     <input type="hidden" name="reservation_id" value="<?= (int) $r['id'] ?>">
                                     <button type="submit" name="action" value="completed" class="btn btn-sm btn-success" 
                                             onclick="return confirm('Mark this reservation as completed?')">
