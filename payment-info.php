@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
                     
                     // If no payment record exists, create one
                     if (!$paymentId) {
-                        $stmt = $db->prepare('SELECT fee FROM open_play_registrations WHERE id = ?');
+                        $stmt = $db->prepare('SELECT total_amount FROM open_play_registrations WHERE id = ?');
                         $stmt->execute([$registrationId]);
                         $reg = $stmt->fetch();
                         
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
                             'INSERT INTO payments (registration_id, payment_type, amount, payment_status, proof_image) 
                              VALUES (?, \'open_play\', ?, \'pending_verification\', ?)'
                         );
-                        $stmt->execute([$registrationId, $reg['fee'], $dbPath]);
+                        $stmt->execute([$registrationId, $reg['total_amount'], $dbPath]);
                         $paymentId = $db->lastInsertId();
                     } else {
                         // Update existing payment record
@@ -118,7 +118,7 @@ if ($reservationId) {
     $item = $stmt->fetch();
     $type = 'reservation';
 } elseif ($registrationId) {
-    $stmt = $db->prepare('SELECT reg.*, s.title, s.session_date, p.payment_status, p.amount, p.proof_image, reg.fee
+    $stmt = $db->prepare('SELECT reg.*, s.title, s.session_date, p.payment_status, p.amount, p.proof_image, reg.total_amount
                           FROM open_play_registrations reg
                           JOIN open_play_sessions s ON s.id = reg.session_id
                           LEFT JOIN payments p ON p.registration_id = reg.id
@@ -205,7 +205,7 @@ require_once __DIR__ . '/includes/header.php';
                         if ($type === 'reservation') {
                             $amount = $item['amount'] ?? $item['total_amount'];
                         } else {
-                            $amount = $item['amount'] ?? $item['fee'];
+                            $amount = $item['amount'] ?? $item['total_amount'];
                         }
                         echo e(formatMoney((float)$amount));
                         ?>
