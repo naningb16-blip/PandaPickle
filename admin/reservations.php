@@ -112,8 +112,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'completed') {
         // Mark reservation as completed
-        $db->prepare('UPDATE exclusive_reservations SET status = ? WHERE id = ?')->execute(['completed', $id]);
+        $db->prepare('UPDATE exclusive_reservations SET status = ?, timer_status = ? WHERE id = ?')->execute(['completed', 'completed', $id]);
         flash('success', 'Reservation marked as completed.');
+    } elseif ($action === 'start_timer') {
+        // Start timer - record start time
+        $db->prepare('UPDATE exclusive_reservations SET timer_started_at = NOW(), timer_status = ? WHERE id = ?')->execute(['running', $id]);
+        flash('success', 'Timer started.');
+    } elseif ($action === 'stop_timer') {
+        // Stop timer
+        $db->prepare('UPDATE exclusive_reservations SET timer_status = ? WHERE id = ?')->execute(['stopped', $id]);
+        flash('success', 'Timer stopped.');
     } elseif (in_array($action, ['approved', 'rejected'], true)) {
         // Check if payment is paid before approving
         if ($action === 'approved') {
@@ -152,7 +160,8 @@ $reservationsQuery = 'SELECT r.*,
             u.email, 
             c.court_name, 
             p.payment_status,
-            CASE WHEN r.user_id IS NULL THEN \'walk-in\' ELSE \'online\' END as booking_type
+            CASE WHEN r.user_id IS NULL THEN \'walk-in\' ELSE \'online\' END as booking_type,
+            EXTRACT(EPOCH FROM (NOW() - r.timer_started_at)) as elapsed_seconds
      FROM exclusive_reservations r
      LEFT JOIN users u ON u.id = r.user_id
      JOIN courts c ON c.id = r.court_id
@@ -292,19 +301,45 @@ require_once __DIR__ . '/../includes/header.php';
                             <td><span class="badge <?= statusBadgeClass($r['status']) ?>"><?= e($r['status']) ?></span></td>
                             <td>
                                 <?php if ($r['status'] === 'approved'): ?>
-                                    <div class="timer-container" id="timer-<?= (int) $r['id'] ?>">
-                                        <div class="countdown-display" style="font-weight: 600; color: #1a5c2e; margin-bottom: 0.25rem;">--:--:--</div>
-                                        <button 
-                                            onclick="startTimer(<?= (int) $r['id'] ?>, <?= $r['hours_reserved'] * 3600 ?>)" 
-                                            class="btn btn-sm btn-success start-btn">
-                                            Start
-                                        </button>
-                                        <button 
-                                            onclick="stopTimer(<?= (int) $r['id'] ?>)" 
-                                            class="btn btn-sm btn-danger stop-btn" 
-                                            style="display: none;">
-                                            Stop
-                                        </button>
+                                    <?php 
+                                    $timerStatus = $r['timer_status'] ?? 'not_started';
+                                    $totalSeconds = $r['hours_reserved'] * 3600;
+                                    $elapsedSeconds = ($timerStatus === 'running' && $r['elapsed_seconds']) ? (int)$r['elapsed_seconds'] : 0;
+                                    $remainingSeconds = max(0, $totalSeconds - $elapsedSeconds);
+                                    ?>
+                                    <div class="timer-container" id="timer-<?= (int) $r['id'] ?>" 
+                                         data-reservation-id="<?= (int) $r['id'] ?>"
+                                         data-total-seconds="<?= $totalSeconds ?>"
+                                         data-elapsed-seconds="<?= $elapsedSeconds ?>"
+                                         data-timer-status="<?= e($timerStatus) ?>">
+                                        <div class="countdown-display" style="font-weight: 600; color: #1a5c2e; margin-bottom: 0.25rem;">
+                                            <?php if ($timerStatus === 'running'): ?>
+                                                <?php
+                                                $h = floor($remainingSeconds / 3600);
+                                                $m = floor(($remainingSeconds % 3600) / 60);
+                                                $s = $remainingSeconds % 60;
+                                                echo sprintf('%02d:%02d:%02d', $h, $m, $s);
+                                                ?>
+                                            <?php else: ?>
+                                                --:--:--
+                                            <?php endif; ?>
+                                        </div>
+                                        <form method="POST" style="display:inline;" class="start-form">
+                                            <input type="hidden" name="reservation_id" value="<?= (int) $r['id'] ?>">
+                                            <button type="submit" name="action" value="start_timer" 
+                                                    class="btn btn-sm btn-success start-btn"
+                                                    <?= $timerStatus === 'running' ? 'style="display:none;"' : '' ?>>
+                                                Start
+                                            </button>
+                                        </form>
+                                        <form method="POST" style="display:inline;" class="stop-form">
+                                            <input type="hidden" name="reservation_id" value="<?= (int) $r['id'] ?>">
+                                            <button type="submit" name="action" value="stop_timer" 
+                                                    class="btn btn-sm btn-danger stop-btn"
+                                                    <?= $timerStatus !== 'running' ? 'style="display:none;"' : '' ?>>
+                                                Stop
+                                            </button>
+                                        </form>
                                     </div>
                                 <?php else: ?>
                                     <span class="text-muted">—</span>
@@ -343,16 +378,74 @@ require_once __DIR__ . '/../includes/header.php';
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
 
-
 <script>
-const timers = {};
-function startTimer(reservationId, totalSeconds) {
+// Persistent timer system - timers continue after page reload
+const runningTimers = {};
+
+// Initialize all running timers on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.timer-container').forEach(container => {
+        const status = container.dataset.timerStatus;
+        if (status === 'running') {
+            const id = parseInt(container.dataset.reservationId);
+            const totalSeconds = parseInt(container.dataset.totalSeconds);
+            const elapsedSeconds = parseInt(container.dataset.elapsedSeconds);
+            const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+            
+            startCountdown(id, remainingSeconds);
+        }
+    });
+});
+
+function startCountdown(reservationId, remainingSeconds) {
     const container = document.getElementById(`timer-${reservationId}`);
     const display = container.querySelector('.countdown-display');
-    const startBtn = container.querySelector('.start-btn');
-    const stopBtn = container.querySelector('.stop-btn');
-    startBtn.style.display = 'none';
-    stopBtn.style.display = 'inline-block';
+    
+    updateDisplay(display, remainingSeconds);
+    
+    runningTimers[reservationId] = setInterval(() => {
+        remainingSeconds--;
+        if (remainingSeconds <= 0) {
+            clearInterval(runningTimers[reservationId]);
+            delete runningTimers[reservationId];
+            display.textContent = "TIME'S UP!";
+            display.style.color = '#b91c1c';
+            display.style.fontWeight = '700';
+            playAlert();
+        } else {
+            updateDisplay(display, remainingSeconds);
+            if (remainingSeconds <= 300) display.style.color = '#b45309'; // Orange when <5 mins
+        }
+    }, 1000);
+}
+
+function updateDisplay(display, seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    display.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function playAlert() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+    } catch(e) {}
+}
+
+// Clean up intervals when leaving page
+window.addEventListener('beforeunload', () => {
+    Object.values(runningTimers).forEach(interval => clearInterval(interval));
+});
+</script>
     let remainingSeconds = totalSeconds;
     updateDisplay(display, remainingSeconds);
     timers[reservationId] = setInterval(() => {
