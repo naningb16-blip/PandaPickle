@@ -110,6 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->prepare('UPDATE payments SET payment_status = ? WHERE reservation_id = ?')->execute([$paymentStatus, $id]);
             flash('success', 'Payment status updated to ' . $paymentStatus . '.');
         }
+    } elseif ($action === 'completed') {
+        // Mark reservation as completed
+        $db->prepare('UPDATE exclusive_reservations SET status = ? WHERE id = ?')->execute(['completed', $id]);
+        flash('success', 'Reservation marked as completed.');
     } elseif (in_array($action, ['approved', 'rejected'], true)) {
         // Check if payment is paid before approving
         if ($action === 'approved') {
@@ -131,8 +135,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$reservations = $db->query(
-    'SELECT r.*, 
+// Search functionality
+$search = $_GET['search'] ?? '';
+$searchCondition = '';
+$searchParams = [];
+
+if (!empty($search)) {
+    $searchCondition = " WHERE (r.reservation_code LIKE ? OR COALESCE(r.customer_name, u.fullname) LIKE ? OR COALESCE(r.customer_phone, u.phone) LIKE ? OR c.court_name LIKE ?)";
+    $searchTerm = '%' . $search . '%';
+    $searchParams = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
+}
+
+$reservationsQuery = 'SELECT r.*, 
             COALESCE(r.customer_name, u.fullname) as customer_name,
             COALESCE(r.customer_phone, u.phone) as customer_phone,
             u.email, 
@@ -142,9 +156,17 @@ $reservations = $db->query(
      FROM exclusive_reservations r
      LEFT JOIN users u ON u.id = r.user_id
      JOIN courts c ON c.id = r.court_id
-     LEFT JOIN payments p ON p.reservation_id = r.id
-     ORDER BY r.created_at DESC'
-)->fetchAll();
+     LEFT JOIN payments p ON p.reservation_id = r.id' 
+     . $searchCondition . '
+     ORDER BY r.created_at DESC';
+
+if (!empty($searchParams)) {
+    $stmt = $db->prepare($reservationsQuery);
+    $stmt->execute($searchParams);
+    $reservations = $stmt->fetchAll();
+} else {
+    $reservations = $db->query($reservationsQuery)->fetchAll();
+}
 
 $basePath = '../';
 $pageTitle = 'Manage Reservations - Admin';
@@ -217,6 +239,17 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Reservations Table -->
             <div class="card">
+                <div class="card-header">
+                    <h3>All Reservations</h3>
+                    <form method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" name="search" placeholder="Search by code, customer, phone, or court" 
+                               value="<?= e($search) ?>" style="padding: 0.5rem; min-width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button type="submit" class="btn btn-sm btn-primary">Search</button>
+                        <?php if (!empty($search)): ?>
+                            <a href="reservations.php" class="btn btn-sm btn-secondary">Clear</a>
+                        <?php endif; ?>
+                    </form>
+                </div>
                 <div class="card-body table-wrap">
                 <table class="data-table">
                     <thead>
@@ -287,6 +320,14 @@ require_once __DIR__ . '/../includes/header.php';
                                         <button type="button" class="btn btn-sm btn-primary" disabled title="Payment must be marked as paid first">Approve</button>
                                     <?php endif; ?>
                                     <button type="submit" name="action" value="rejected" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                                <?php elseif ($r['status'] === 'approved'): ?>
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="reservation_id" value="<?= (int) $r['id'] ?>">
+                                    <button type="submit" name="action" value="completed" class="btn btn-sm btn-success" 
+                                            onclick="return confirm('Mark this reservation as completed?')">
+                                        ✓ Complete
+                                    </button>
                                 </form>
                                 <?php else: ?>—<?php endif; ?>
                             </td>
