@@ -42,7 +42,9 @@ require_once __DIR__ . '/includes/header.php';
                 <ul class="mt-2 text-muted">
                     <li>Automatic overlap prevention</li>
                     <li>Admin approval workflow</li>
-                    <li>Payment proof upload</li>
+                    <li>70% cashless downpayment for advance booking</li>
+                    <li>Cancelation has no Refunds</li>
+                    <li>Pay Via cash or cashless</li>
                 </ul>
                 <a href="login.php" class="btn btn-primary mt-2">Get Started</a>
             </div>
@@ -55,6 +57,8 @@ require_once __DIR__ . '/includes/header.php';
                     <li>View available slots</li>
                     <li>Register multiple players</li>
                     <li>Track registration status</li>
+                    <li>Register With Friends Only</li>
+                    <li>Pay Via cash or cashless</li>
                 </ul>
                 <a href="open-play.php" class="btn btn-primary mt-2">Browse Sessions</a>
             </div>
