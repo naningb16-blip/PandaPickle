@@ -1,0 +1,138 @@
+========================================
+PERSISTENT TIMER SYSTEM - UPDATE GUIDE
+========================================
+
+WHAT'S NEW:
+-----------
+Timers now persist across page reloads! Timer state is stored in the database instead of only in browser memory.
+
+FEATURES:
+---------
+✅ Timer continues running after page refresh
+✅ Shows accurate remaining time based on when timer was started
+✅ Timer state saved in database (not just JavaScript)
+✅ Automatic restoration of running timers on page load
+✅ Orange color warning when <5 minutes remaining
+✅ Audio alert when time is up
+
+HOW IT WORKS:
+-------------
+1. Admin clicks "Start" button → Saves timestamp to database
+2. Timer counts down in JavaScript
+3. Page refresh → Calculates elapsed time from database
+4. Timer continues from where it left off
+5. Admin clicks "Stop" → Updates database status
+
+DATABASE CHANGES:
+-----------------
+Two new columns added to exclusive_reservations table:
+
+1. timer_started_at (TIMESTAMP NULL)
+   - Stores when the timer was started
+   - NULL if timer never started
+
+2. timer_status (VARCHAR)
+   - Values: 'not_started', 'running', 'stopped', 'completed'
+   - Tracks current timer state
+
+MIGRATION REQUIRED:
+-------------------
+⚠️ IMPORTANT: You must run the migration to add these columns!
+
+FOR LOCAL DEVELOPMENT (XAMPP/MySQL):
+1. Open phpMyAdmin
+2. Select your 'pandapickle' database
+3. Go to SQL tab
+4. Copy and paste SQL from: database/migration_add_timer_tracking.sql
+5. Click "Go" to execute
+
+FOR RENDER (PostgreSQL):
+1. Open TablePlus
+2. Connect to your Render PostgreSQL database
+3. Open database/migration_add_timer_tracking.sql
+4. Copy all SQL code
+5. Paste and execute in TablePlus
+
+MIGRATION SQL FILE:
+-------------------
+File: database/migration_add_timer_tracking.sql
+
+Contents:
+- ALTER TABLE to add timer_started_at column
+- ALTER TABLE to add timer_status column
+- CREATE INDEX for performance
+- COMMENTS for documentation
+
+TIMER WORKFLOW:
+---------------
+
+1. PENDING RESERVATION:
+   - No timer available
+   - Admin must approve first
+
+2. APPROVED RESERVATION:
+   - "Start" button appears
+   - Click to start timer
+   - Timer status: 'not_started' → 'running'
+   - Timestamp saved to database
+
+3. TIMER RUNNING:
+   - Countdown displays: HH:MM:SS
+   - "Stop" button appears
+   - Refreshing page: Timer continues from correct time
+   - <5 minutes: Timer turns orange
+   - Time's up: Shows "TIME'S UP!" in red + audio alert
+
+4. TIMER STOPPED:
+   - Click "Stop" to pause
+   - Timer status: 'running' → 'stopped'
+   - Can restart if needed
+
+5. MARK AS COMPLETED:
+   - Click "✓ Complete" button
+   - Reservation status: 'approved' → 'completed'
+   - Timer status: → 'completed'
+
+TECHNICAL DETAILS:
+------------------
+
+DATABASE QUERY:
+- EXTRACT(EPOCH FROM (NOW() - timer_started_at)) calculates elapsed seconds
+- Remaining time = Total time - Elapsed time
+
+JAVASCRIPT:
+- Checks data-timer-status on page load
+- If 'running', starts countdown from remaining time
+- Updates every second
+- Clears interval when time expires
+
+FORM ACTIONS:
+- Start Timer: POST with action=start_timer
+- Stop Timer: POST with action=stop_timer  
+- Complete: POST with action=completed
+
+BENEFITS:
+---------
+✅ No more lost timers on page refresh!
+✅ Admins can safely reload without losing track
+✅ Multiple tabs work independently
+✅ Accurate time tracking
+✅ Better user experience
+
+TESTING:
+--------
+1. Approve a reservation
+2. Start timer
+3. Wait 30 seconds
+4. Refresh page
+5. Timer should continue from ~30 seconds elapsed ✓
+
+DEPLOYMENT:
+-----------
+✅ Code pushed to GitHub (commit: 4e4e523)
+✅ Migration file included
+⚠️ Don't forget to run migration on Render database!
+
+Date: 2026-06-21
+Version: 2.0 (Persistent Timers)
+Status: READY ✅
