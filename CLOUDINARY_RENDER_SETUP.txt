@@ -1,0 +1,107 @@
+========================================
+🚀 CLOUDINARY - RENDER DEPLOYMENT SETUP
+========================================
+
+✅ LOCAL SETUP: COMPLETE
+Your credentials are now configured in config/cloudinary.php
+
+✅ TESTING LOCALLY:
+1. Go to http://localhost/PandaPickle
+2. Login as user
+3. Make a reservation
+4. Click "Pay Now"
+5. Upload a receipt image
+6. It will upload to Cloudinary!
+7. Check: https://console.cloudinary.com/console/c-deiy19kv4/media_library
+
+========================================
+📋 ADD TO RENDER ENVIRONMENT VARIABLES
+========================================
+
+Go to Render Dashboard:
+1. Open: https://dashboard.render.com
+2. Click your PandaPickle web service
+3. Click "Environment" tab on the left
+4. Click "Add Environment Variable" button
+
+Add these 3 variables:
+
+┌─────────────────────────────────────────────────────────┐
+│ Variable 1:                                             │
+│ Key:   CLOUDINARY_CLOUD_NAME                            │
+│ Value: deiy19kv4                                        │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ Variable 2:                                             │
+│ Key:   CLOUDINARY_API_KEY                               │
+│ Value: 572354856766819                                  │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ Variable 3:                                             │
+│ Key:   CLOUDINARY_API_SECRET                            │
+│ Value: rKBaLRXrB1Hzrfi_Dstxc6Gecsgheres                 │
+└─────────────────────────────────────────────────────────┘
+
+5. Click "Save Changes"
+6. Render will automatically redeploy
+
+========================================
+✅ VERIFICATION STEPS
+========================================
+
+After Render redeploys:
+
+1. Go to your live site
+2. Login and upload a test receipt
+3. Go to Cloudinary dashboard:
+   https://console.cloudinary.com/console/c-deiy19kv4/media_library
+4. Look for folder: pandapickle/receipts
+5. Your receipt should be there!
+
+========================================
+🎯 WHAT HAPPENS NOW
+========================================
+
+LOCAL DEVELOPMENT:
+- Uses credentials from config/cloudinary.php
+- Uploads to: pandapickle/receipts folder
+- Images stored permanently in cloud
+
+RENDER PRODUCTION:
+- Uses environment variables (priority over config file)
+- Uploads to same folder: pandapickle/receipts
+- Images persist even after redeployment! ✅
+
+========================================
+📸 VIEW YOUR UPLOADS
+========================================
+
+Cloudinary Dashboard:
+https://console.cloudinary.com/console/c-deiy19kv4
+
+Media Library (see all receipts):
+https://console.cloudinary.com/console/c-deiy19kv4/media_library/folders/pandapickle
+
+========================================
+💾 COMMIT & DEPLOY
+========================================
+
+Ready to push to GitHub:
+
+git add config/cloudinary.php payment-info.php admin/payments.php
+git commit -m "Add Cloudinary integration for persistent receipt storage"
+git push origin main
+
+Then add environment variables on Render (instructions above).
+
+========================================
+✨ DONE!
+========================================
+
+Your receipt uploads will now be stored permanently
+in Cloudinary cloud storage, surviving all Render
+redeployments and restarts!
+
+No more lost receipts! 🎉

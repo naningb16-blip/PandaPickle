@@ -1,0 +1,273 @@
+========================================
+📸 CLOUDINARY INTEGRATION - SETUP GUIDE
+========================================
+
+WHY CLOUDINARY?
+---------------
+Render's filesystem is EPHEMERAL - files uploaded to the server are deleted when:
+- You deploy a new version
+- The service restarts
+- The container is replaced
+
+Cloudinary provides PERSISTENT cloud storage for images that:
+✅ Never gets deleted
+✅ Automatically optimizes images
+✅ Provides CDN delivery (faster loading)
+✅ Free tier: 25GB storage, 25GB bandwidth/month
+
+========================================
+STEP 1: CREATE CLOUDINARY ACCOUNT
+========================================
+
+1. Go to: https://cloudinary.com/users/register/free
+2. Sign up with email or Google account
+3. Verify your email address
+4. Login to Cloudinary dashboard
+
+========================================
+STEP 2: GET YOUR CREDENTIALS
+========================================
+
+1. After login, you'll see the Dashboard
+2. Look for "Account Details" section (top of page)
+3. You'll see:
+   
+   Cloud name: your_cloud_name
+   API Key: 123456789012345
+   API Secret: abcdefghijklmnopqrstuvwxyz123
+
+4. Click "👁️ Reveal" to see API Secret
+5. Copy these three values - you'll need them!
+
+========================================
+STEP 3: CONFIGURE LOCALLY (TESTING)
+========================================
+
+Option A: Edit config/cloudinary.php directly
+----------------------------------------------
+1. Open: config/cloudinary.php
+2. Replace these lines:
+
+   define('CLOUDINARY_CLOUD_NAME', 'your_cloud_name');
+   define('CLOUDINARY_API_KEY', 'your_api_key');
+   define('CLOUDINARY_API_SECRET', 'your_api_secret');
+
+   With your actual values:
+
+   define('CLOUDINARY_CLOUD_NAME', 'myaccount');
+   define('CLOUDINARY_API_KEY', '123456789012345');
+   define('CLOUDINARY_API_SECRET', 'abcdefghijklmnopqrstuvwxyz123');
+
+3. Save the file
+
+Option B: Use environment variables (RECOMMENDED)
+-------------------------------------------------
+This keeps secrets out of your code!
+
+Windows (CMD):
+set CLOUDINARY_CLOUD_NAME=myaccount
+set CLOUDINARY_API_KEY=123456789012345
+set CLOUDINARY_API_SECRET=abcdefghijklmnopqrstuvwxyz123
+
+Windows (PowerShell):
+$env:CLOUDINARY_CLOUD_NAME="myaccount"
+$env:CLOUDINARY_API_KEY="123456789012345"
+$env:CLOUDINARY_API_SECRET="abcdefghijklmnopqrstuvwxyz123"
+
+Then restart your XAMPP Apache server.
+
+========================================
+STEP 4: TEST LOCALLY
+========================================
+
+1. Login to your local PandaPickle site
+2. Make a reservation or open play registration
+3. Click "Pay Now"
+4. Upload a receipt image
+5. Check Cloudinary dashboard:
+   - Go to Media Library
+   - Look for folder: pandapickle/receipts
+   - Your uploaded image should appear there!
+
+========================================
+STEP 5: CONFIGURE ON RENDER
+========================================
+
+1. Login to Render dashboard: https://dashboard.render.com
+2. Click on your PandaPickle web service
+3. Go to "Environment" tab
+4. Click "Add Environment Variable"
+
+Add these 3 variables:
+
+Variable 1:
+   Key: CLOUDINARY_CLOUD_NAME
+   Value: your_cloud_name
+   
+Variable 2:
+   Key: CLOUDINARY_API_KEY
+   Value: 123456789012345
+   
+Variable 3:
+   Key: CLOUDINARY_API_SECRET
+   Value: abcdefghijklmnopqrstuvwxyz123
+
+5. Click "Save Changes"
+6. Render will automatically redeploy your service
+
+========================================
+STEP 6: TEST ON RENDER
+========================================
+
+1. Wait for Render deployment to complete
+2. Visit your live site
+3. Upload a test receipt
+4. Check Cloudinary Media Library
+5. Receipt should appear in: pandapickle/receipts folder
+
+========================================
+HOW IT WORKS
+========================================
+
+BEFORE (Local filesystem):
+User uploads → Saved to uploads/receipts/ → Deleted on Render restart ❌
+
+AFTER (Cloudinary):
+User uploads → Sent to Cloudinary API → Stored in cloud → URL saved to database ✅
+
+DATABASE STORAGE:
+- Before: proof_image = 'uploads/receipts/receipt_123.jpg' (local path)
+- After: proof_image = 'https://res.cloudinary.com/myaccount/image/upload/v123/pandapickle/receipts/receipt_123.jpg' (full URL)
+
+IMAGE DISPLAY:
+- Admin can click receipt thumbnail to view full image
+- Image loads from Cloudinary CDN (fast!)
+- Works even after Render redeployments
+
+========================================
+CLOUDINARY FEATURES
+========================================
+
+FREE TIER LIMITS:
+- Storage: 25GB
+- Bandwidth: 25GB/month
+- Transformations: 25 credits/month
+- More than enough for small business!
+
+FOLDER STRUCTURE:
+pandapickle/
+└── receipts/
+    ├── receipt_1719100800_abc123
+    ├── receipt_1719100900_def456
+    └── receipt_1719101000_ghi789
+
+IMAGE TRANSFORMATIONS (Advanced):
+You can optimize images on-the-fly by modifying URLs:
+- Resize: /w_400,h_300/
+- Compress: /q_auto/
+- Format: /f_auto/
+
+Example:
+Original: https://res.cloudinary.com/.../receipt_123
+Optimized: https://res.cloudinary.com/.../w_400,q_auto,f_auto/receipt_123
+
+========================================
+TROUBLESHOOTING
+========================================
+
+ERROR: "Cloudinary credentials not configured"
+FIX: Check that environment variables are set correctly
+     - Restart Apache/PHP-FPM after setting env vars
+     - On Render, check Environment tab
+
+ERROR: "Failed to upload receipt to cloud storage"
+FIX: 
+     - Check your API credentials are correct
+     - Verify your internet connection
+     - Check Cloudinary dashboard for API usage limits
+
+ERROR: Image not displaying in admin panel
+FIX:
+     - Check proof_image column in database contains full URL
+     - Try opening URL directly in browser
+     - Check Cloudinary Media Library to confirm upload succeeded
+
+IMAGES STILL DISAPPEARING:
+FIX:
+     - Verify environment variables are set on Render
+     - Check database - proof_image should be full Cloudinary URL
+     - If old uploads used local paths, they won't work (upload new receipts)
+
+========================================
+SECURITY NOTES
+========================================
+
+✅ API Secret is protected:
+   - Never commit to Git
+   - Use environment variables
+   - config/cloudinary.php uses getenv() by default
+
+✅ Upload validation:
+   - File type checked (only images)
+   - File size limited (5MB)
+   - User authentication required
+
+✅ Signature-based uploads:
+   - Requests are signed with API secret
+   - Prevents unauthorized uploads
+
+========================================
+MIGRATION CHECKLIST
+========================================
+
+□ Create Cloudinary account
+□ Get API credentials (cloud name, key, secret)
+□ Set environment variables locally
+□ Test upload locally
+□ Verify image appears in Cloudinary dashboard
+□ Set environment variables on Render
+□ Deploy to Render
+□ Test upload on live site
+□ Verify images persist after Render redeploy
+□ Update documentation
+
+========================================
+COST ESTIMATION
+========================================
+
+FREE TIER (Current usage):
+- ~10 receipts/day = 300 receipts/month
+- Average receipt size: 500KB
+- Monthly storage: 300 × 500KB = 150MB
+- Monthly bandwidth: 300 × 500KB × 2 views = 300MB
+
+Status: Well within free tier limits! ✅
+
+If you exceed free tier:
+- Advanced plan: $89/month (100GB storage, 100GB bandwidth)
+- But you'd need 50,000 receipts/month to hit that!
+
+========================================
+FILES MODIFIED
+========================================
+
+NEW FILES:
+✅ config/cloudinary.php - Cloudinary API integration
+
+MODIFIED FILES:
+✅ payment-info.php - Upload to Cloudinary instead of local
+✅ admin/payments.php - Display Cloudinary URLs correctly
+
+NO DATABASE CHANGES NEEDED:
+✅ proof_image column already exists (VARCHAR 255)
+✅ Can store full Cloudinary URLs (no schema change)
+
+========================================
+DEPLOYMENT READY! 🚀
+========================================
+
+Once you set environment variables on Render,
+all receipt uploads will be stored permanently
+in Cloudinary cloud storage!
+
+Next step: Set Cloudinary credentials!

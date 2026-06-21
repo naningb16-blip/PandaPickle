@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/config/cloudinary.php';
 requireLogin();
 
 $db = getDB();
@@ -22,19 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
         } elseif ($file['size'] > $maxSize) {
             $uploadError = 'File size must not exceed 5MB.';
         } else {
-            // Create uploads directory if it doesn't exist
-            $uploadsDir = __DIR__ . '/uploads/receipts';
-            if (!is_dir($uploadsDir)) {
-                mkdir($uploadsDir, 0755, true);
-            }
+            // Upload to Cloudinary
+            $uploadResult = uploadToCloudinary($file['tmp_name'], 'pandapickle/receipts');
             
-            // Generate unique filename
-            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $filename = 'receipt_' . time() . '_' . uniqid() . '.' . $extension;
-            $targetPath = $uploadsDir . '/' . $filename;
-            $dbPath = 'uploads/receipts/' . $filename;
-            
-            if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            if ($uploadResult === false) {
+                $uploadError = 'Failed to upload receipt to cloud storage. Please try again.';
+            } else {
+                $cloudinaryUrl = $uploadResult['url'];
+                $cloudinaryPublicId = $uploadResult['public_id'];
+                
                 // Check if payment record exists
                 $paymentId = null;
                 if ($reservationId) {
@@ -53,14 +50,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
                             'INSERT INTO payments (reservation_id, payment_type, amount, payment_status, proof_image) 
                              VALUES (?, \'reservation\', ?, \'pending_verification\', ?)'
                         );
-                        $stmt->execute([$reservationId, $res['total_amount'], $dbPath]);
+                        $stmt->execute([$reservationId, $res['total_amount'], $cloudinaryUrl]);
                         $paymentId = $db->lastInsertId();
                     } else {
                         // Update existing payment record
                         $stmt = $db->prepare(
                             'UPDATE payments SET proof_image = ?, payment_status = \'pending_verification\' WHERE id = ?'
                         );
-                        $stmt->execute([$dbPath, $paymentId]);
+                        $stmt->execute([$cloudinaryUrl, $paymentId]);
                     }
                 } elseif ($registrationId) {
                     $stmt = $db->prepare('SELECT id FROM payments WHERE registration_id = ?');
@@ -78,22 +75,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
                             'INSERT INTO payments (registration_id, payment_type, amount, payment_status, proof_image) 
                              VALUES (?, \'open_play\', ?, \'pending_verification\', ?)'
                         );
-                        $stmt->execute([$registrationId, $reg['total_amount'], $dbPath]);
+                        $stmt->execute([$registrationId, $reg['total_amount'], $cloudinaryUrl]);
                         $paymentId = $db->lastInsertId();
                     } else {
                         // Update existing payment record
                         $stmt = $db->prepare(
                             'UPDATE payments SET proof_image = ?, payment_status = \'pending_verification\' WHERE id = ?'
                         );
-                        $stmt->execute([$dbPath, $paymentId]);
+                        $stmt->execute([$cloudinaryUrl, $paymentId]);
                     }
                 }
                 
                 flash('success', 'Receipt uploaded successfully! Your payment is now pending admin verification.');
                 header('Location: dashboard.php');
                 exit;
-            } else {
-                $uploadError = 'Failed to upload file. Please try again.';
             }
         }
     } else {

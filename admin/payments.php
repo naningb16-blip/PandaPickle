@@ -74,7 +74,9 @@ require_once __DIR__ . '/../includes/header.php';
                             <td><?= e(formatMoney((float) $p['amount'])) ?></td>
                             <td>
                                 <?php if ($p['proof_image']): ?>
-                                    <a href="../<?= e($p['proof_image']) ?>" target="_blank"><img src="../<?= e($p['proof_image']) ?>" class="proof-thumb" alt="Proof"></a>
+                                    <a href="<?= e($p['proof_image']) ?>" target="_blank">
+                                        <img src="<?= e($p['proof_image']) ?>" class="proof-thumb" alt="Receipt">
+                                    </a>
                                 <?php else: ?>—<?php endif; ?>
                             </td>
                             <td><span class="badge <?= statusBadgeClass($p['payment_status']) ?>"><?= e(str_replace('_', ' ', $p['payment_status'])) ?></span></td>
