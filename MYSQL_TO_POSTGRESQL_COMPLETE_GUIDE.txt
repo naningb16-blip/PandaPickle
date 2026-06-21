@@ -1,0 +1,250 @@
+========================================
+MYSQL TO POSTGRESQL - COMPLETE CONVERSION GUIDE
+========================================
+
+This document lists ALL the MySQL-specific features that were converted to PostgreSQL equivalents in the PandaPickle project.
+
+========================================
+1. DATE/TIME FUNCTIONS
+========================================
+
+✅ CURDATE() → CURRENT_DATE
+   MySQL:      WHERE date_column >= CURDATE()
+   PostgreSQL: WHERE date_column >= CURRENT_DATE
+
+✅ NOW() → NOW() (same in both)
+   MySQL:      WHERE created_at <= NOW()
+   PostgreSQL: WHERE created_at <= NOW()
+
+✅ DATE_SUB() → INTERVAL arithmetic
+   MySQL:      WHERE created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+   PostgreSQL: WHERE created_at > NOW() - INTERVAL '5 minutes'
+   
+   MySQL:      WHERE verified_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+   PostgreSQL: WHERE verified_at >= CURRENT_DATE - INTERVAL '7 days'
+
+========================================
+2. STRING FUNCTIONS
+========================================
+
+✅ GROUP_CONCAT() → STRING_AGG()
+   MySQL:      GROUP_CONCAT(DISTINCT column SEPARATOR ', ')
+   PostgreSQL: STRING_AGG(DISTINCT column, ', ')
+   
+   Example:
+   MySQL:      GROUP_CONCAT(DISTINCT CONCAT(name, ' & ', partner) SEPARATOR ' | ')
+   PostgreSQL: STRING_AGG(DISTINCT name || ' & ' || partner, ' | ')
+
+✅ CONCAT() → || (concatenation operator)
+   MySQL:      CONCAT(first_name, ' ', last_name)
+   PostgreSQL: first_name || ' ' || last_name
+   
+   Note: PostgreSQL also supports CONCAT() but || is more idiomatic
+
+========================================
+3. CONDITIONAL EXPRESSIONS
+========================================
+
+✅ IF() → CASE WHEN
+   MySQL:      IF(condition, true_value, false_value)
+   PostgreSQL: CASE WHEN condition THEN true_value ELSE false_value END
+   
+   Example:
+   MySQL:      IF(user_id IS NULL, "walk-in", "online") as booking_type
+   PostgreSQL: CASE WHEN user_id IS NULL THEN 'walk-in' ELSE 'online' END as booking_type
+
+========================================
+4. RANDOM FUNCTIONS
+========================================
+
+✅ RAND() → RANDOM()
+   MySQL:      ORDER BY RAND()
+   PostgreSQL: ORDER BY RANDOM()
+
+========================================
+5. QUOTE SYNTAX
+========================================
+
+✅ String Literals: Use SINGLE quotes
+   MySQL:      Accepts both 'value' and "value"
+   PostgreSQL: ONLY 'value' (double quotes are for identifiers)
+   
+   ❌ WRONG: WHERE status = "active"
+   ✅ RIGHT: WHERE status = 'active'
+
+✅ Identifiers: Use DOUBLE quotes (optional)
+   MySQL:      `column_name` or column_name
+   PostgreSQL: "column_name" or column_name (lowercase only without quotes)
+   
+   Note: PostgreSQL is case-insensitive for unquoted identifiers
+
+========================================
+6. AUTO INCREMENT
+========================================
+
+✅ AUTO_INCREMENT → SERIAL
+   MySQL:      id INT AUTO_INCREMENT PRIMARY KEY
+   PostgreSQL: id SERIAL PRIMARY KEY
+   
+   Behind the scenes:
+   PostgreSQL: id INTEGER NOT NULL DEFAULT nextval('table_name_id_seq')
+
+========================================
+7. ENUM TYPE
+========================================
+
+✅ ENUM → VARCHAR with CHECK constraint
+   MySQL:      status ENUM('active', 'inactive')
+   PostgreSQL: status VARCHAR(20) CHECK (status IN ('active', 'inactive'))
+   
+   Note: PostgreSQL supports native ENUM but CHECK constraints are more flexible
+
+========================================
+8. DEFAULT VALUES
+========================================
+
+✅ CURRENT_TIMESTAMP → CURRENT_TIMESTAMP (same)
+   MySQL:      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   PostgreSQL: created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+========================================
+9. GROUP BY REQUIREMENTS
+========================================
+
+⚠️ IMPORTANT DIFFERENCE:
+
+MySQL: Allows non-aggregated columns in SELECT without GROUP BY
+   SELECT id, name, COUNT(*) FROM table GROUP BY id  -- Works in MySQL
+
+PostgreSQL: Requires ALL non-aggregated SELECT columns in GROUP BY
+   SELECT id, name, COUNT(*) FROM table GROUP BY id, name  -- Required
+
+Example from our code:
+   MySQL:      GROUP BY s.id, reg.friend_group
+   PostgreSQL: GROUP BY s.id, s.title, s.session_date, reg.friend_group, reg.match_preference
+   
+   We had to add s.title, s.session_date, reg.match_preference to GROUP BY
+
+========================================
+10. DATA TYPES
+========================================
+
+✅ TEXT/BLOB types
+   MySQL:      TEXT, MEDIUMTEXT, LONGTEXT
+   PostgreSQL: TEXT (unlimited length by default)
+
+✅ Integer types
+   MySQL:      TINYINT, SMALLINT, INT, BIGINT
+   PostgreSQL: SMALLINT, INTEGER, BIGINT (no TINYINT)
+
+✅ Decimal types
+   MySQL:      DECIMAL(10,2) / NUMERIC(10,2)
+   PostgreSQL: DECIMAL(10,2) / NUMERIC(10,2) (same)
+
+========================================
+SUMMARY OF FILES MODIFIED
+========================================
+
+✅ admin/reservations.php
+   - 5× quote fixes
+   - 1× IF() → CASE WHEN
+   - 1× "value" → 'value'
+
+✅ admin/open-play.php  
+   - 9× quote fixes
+   - 2× IF() → CASE WHEN
+   - 1× RAND() → RANDOM()
+   - 1× GROUP_CONCAT() → STRING_AGG()
+   - 1× CONCAT() → ||
+   - 1× GROUP BY fix (added missing columns)
+   - 6× UPDATE queries quote fixes
+
+✅ reservations.php
+   - 1× quote fix
+   - 1× DATE_SUB() → INTERVAL
+
+✅ open-play.php
+   - 1× quote fix
+   - 1× DATE_SUB() → INTERVAL
+   - 1× CURDATE() → CURRENT_DATE
+
+✅ dashboard.php
+   - 2× CURDATE() → CURRENT_DATE
+
+✅ admin/index.php
+   - 1× CURDATE() → CURRENT_DATE
+
+✅ admin/reports.php
+   - 3× date function fixes
+
+✅ admin/export.php
+   - 3× date function fixes
+
+✅ includes/auth.php
+   - NOW() usage (already compatible)
+
+✅ admin/payments.php
+   - NOW() usage (already compatible)
+
+✅ debug_friend_groups.php
+   - 1× GROUP_CONCAT() → STRING_AGG()
+   - 1× CONCAT() → ||
+   - 1× GROUP BY fix
+
+✅ database/schema.sql
+   - Complete conversion to PostgreSQL DDL
+
+========================================
+POSTGRESQL ADVANTAGES
+========================================
+
+After conversion, you gain these PostgreSQL benefits:
+
+✓ Stronger ACID compliance
+✓ Better handling of concurrent writes
+✓ More advanced indexing (GIN, GiST, etc.)
+✓ JSON/JSONB support for flexible data
+✓ More sophisticated query optimization
+✓ Better support for complex queries
+✓ Stricter data type checking (catches bugs)
+✓ Window functions (ROW_NUMBER, PARTITION BY, etc.)
+✓ Common Table Expressions (WITH queries)
+✓ Full support for foreign keys and constraints
+✓ Better performance for large datasets
+
+========================================
+TESTING CHECKLIST
+========================================
+
+After deployment, test these features:
+
+□ User registration and login
+□ Dashboard loads correctly
+□ Create exclusive court reservation
+□ View and filter reservations
+□ Create open play session
+□ Register for open play (random match)
+□ Register for open play (play with friends)
+□ Generate matches for open play
+□ View friend groups schedule
+□ Payment status updates
+□ Admin approval workflow
+□ Reports and export functionality
+□ Walk-in reservations
+□ Walk-in open play registrations
+□ Timer functionality for reservations
+□ Match finish/reset actions
+
+========================================
+DEPLOYMENT INFORMATION
+========================================
+
+Total Commits: 7
+Latest Commit: f4bf925
+Branch: main
+Status: Ready for production ✅
+
+All MySQL-specific code has been successfully converted to PostgreSQL!
+
+Date: 2026-06-21
+Version: 1.0 (Complete)
