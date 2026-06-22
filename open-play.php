@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_session'])) 
             $team1P2 = trim($_POST['team1_player2'] ?? '');
             $team2P1 = trim($_POST['team2_player1'] ?? '');
             $team2P2 = trim($_POST['team2_player2'] ?? '');
-            $paymentMethod = $_POST['payment_method_friends'] ?? 'cash';
+            $paymentMethod = $_POST['payment_method_friends'] ?? 'cashless';
             
             if (empty($team1P1) || empty($team1P2) || empty($team2P1) || empty($team2P2)) {
                 $error = 'Please enter all 4 player names.';
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_session'])) 
             // Random Match - Register 1 team (2 players)
             $userName = trim($_POST['user_name'] ?? '');
             $partnerName = trim($_POST['partner_name'] ?? '');
-            $paymentMethod = $_POST['payment_method'] ?? 'cash';
+            $paymentMethod = $_POST['payment_method'] ?? 'cashless';
 
             if (empty($userName)) {
                 $error = 'Please enter your name.';
@@ -260,7 +260,6 @@ require_once __DIR__ . '/includes/header.php';
                                         <input type="text" name="user_name" id="user_name_<?= $s['id'] ?>" placeholder="Your Name" required style="padding:0.4rem;min-width:150px;">
                                         <input type="text" name="partner_name" id="partner_name_<?= $s['id'] ?>" placeholder="Partner's Name" required style="padding:0.4rem;min-width:150px;">
                                         <select name="payment_method" id="payment_method_<?= $s['id'] ?>" required style="padding:0.4rem;">
-                                            <option value="cash">Cash</option>
                                             <option value="cashless">Cashless</option>
                                         </select>
                                     </div>
@@ -277,7 +276,6 @@ require_once __DIR__ . '/includes/header.php';
                                             <input type="text" name="team2_player2" id="team2_player2_<?= $s['id'] ?>" placeholder="Friend 2 Name" style="padding:0.4rem;min-width:150px;">
                                         </div>
                                         <select name="payment_method_friends" id="payment_method_friends_<?= $s['id'] ?>" style="padding:0.4rem;">
-                                            <option value="cash">Cash</option>
                                             <option value="cashless">Cashless</option>
                                         </select>
                                         <p style="font-size:0.85rem;color:#065f46;margin:0.5rem 0 0 0;">

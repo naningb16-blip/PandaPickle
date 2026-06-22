@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_reservation'])
     $date = $_POST['reservation_date'] ?? '';
     $startTime = $_POST['start_time'] ?? '';
     $hours = (float) ($_POST['hours_reserved'] ?? 0);
-    $paymentMethod = $_POST['payment_method'] ?? 'cash';
+    $paymentMethod = $_POST['payment_method'] ?? 'cashless';
 
     if ($courtId <= 0 || $date === '' || $startTime === '' || $hours <= 0) {
         $error = 'Please fill in all reservation fields.';
@@ -182,9 +182,11 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="form-group">
                         <label for="payment_method">Payment Method</label>
                         <select id="payment_method" name="payment_method" required>
-                            <option value="cash">Cash</option>
                             <option value="cashless">Cashless (GCash/Bank Transfer)</option>
                         </select>
+                        <p class="form-hint" style="color: #059669; margin-top: 0.5rem;">
+                            💳 Online reservations require cashless payment. Upload proof of payment after admin approval.
+                        </p>
                     </div>
                     <button type="submit" name="create_reservation" class="btn btn-primary btn-block">Submit Reservation</button>
                 </form>
