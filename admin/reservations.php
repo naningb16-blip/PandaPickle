@@ -483,57 +483,6 @@ window.addEventListener('beforeunload', () => {
     Object.values(runningTimers).forEach(interval => clearInterval(interval));
 });
 </script>
-    let remainingSeconds = totalSeconds;
-    updateDisplay(display, remainingSeconds);
-    timers[reservationId] = setInterval(() => {
-        remainingSeconds--;
-        if (remainingSeconds <= 0) {
-            clearInterval(timers[reservationId]);
-            display.textContent = "TIME'S UP!";
-            display.style.color = '#b91c1c';
-            display.style.fontWeight = '700';
-            stopBtn.textContent = 'Reset';
-            playAlert();
-        } else {
-            updateDisplay(display, remainingSeconds);
-            if (remainingSeconds <= 300) display.style.color = '#b45309';
-        }
-    }, 1000);
-}
-function stopTimer(reservationId) {
-    if (timers[reservationId]) {
-        clearInterval(timers[reservationId]);
-        delete timers[reservationId];
-    }
-    const container = document.getElementById(`timer-${reservationId}`);
-    const display = container.querySelector('.countdown-display');
-    const startBtn = container.querySelector('.start-btn');
-    const stopBtn = container.querySelector('.stop-btn');
-    display.textContent = '--:--:--';
-    display.style.color = '#1a5c2e';
-    startBtn.style.display = 'inline-block';
-    stopBtn.style.display = 'none';
-    stopBtn.textContent = 'Stop';
-}
-function updateDisplay(display, seconds) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    display.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
-function playAlert() {
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.value = 800;
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.5);
-    } catch(e) {}
-}
-window.addEventListener('beforeunload', () => Object.keys(timers).forEach(id => clearInterval(timers[id])));
-</script>
+
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
