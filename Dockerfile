@@ -1,5 +1,6 @@
 # Use PHP with Apache
 FROM php:8.2-apache
+# Force rebuild: 2026-06-22
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
