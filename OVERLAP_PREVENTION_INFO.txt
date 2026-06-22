@@ -1,0 +1,70 @@
+OVERLAP PREVENTION - HOW IT WORKS
+=====================================
+
+The reservation system ALREADY prevents overlapping bookings using the hasReservationOverlap() function.
+
+## How It Works:
+
+The system checks if a new reservation overlaps with any existing reservation using this logic:
+- Existing reservation: start_time to end_time
+- New reservation: new_start to new_end
+- OVERLAP detected if: (new_start < existing_end) AND (new_end > existing_start)
+
+## Examples:
+
+### Scenario 1: Existing booking 5:00 AM - 10:00 AM
+- ✅ ALLOWED: 10:00 AM - 2:00 PM (starts exactly when previous ends)
+- ✅ ALLOWED: 2:00 PM - 5:00 PM (no overlap)
+- ❌ BLOCKED: 9:00 AM - 11:00 AM (overlaps with existing 5-10am)
+- ❌ BLOCKED: 5:00 AM - 6:00 AM (overlaps with existing 5-10am)
+- ❌ BLOCKED: 4:00 AM - 11:00 AM (encompasses existing 5-10am)
+
+### Scenario 2: Existing booking 10:00 AM - 2:00 PM
+- ✅ ALLOWED: 5:00 AM - 10:00 AM (ends exactly when next starts)
+- ✅ ALLOWED: 2:00 PM - 5:00 PM (starts exactly when previous ends)
+- ❌ BLOCKED: 9:00 AM - 11:00 AM (overlaps)
+- ❌ BLOCKED: 1:00 PM - 3:00 PM (overlaps)
+- ❌ BLOCKED: 11:00 AM - 1:00 PM (overlaps)
+
+### Scenario 3: Multiple bookings same court, same day
+Court 1, June 22, 2026:
+- 5:00 AM - 8:00 AM (Booked)
+- 8:00 AM - 12:00 PM (Booked)
+- 12:00 PM - 3:00 PM (Booked)
+- 3:00 PM - 7:00 PM (Available)
+- 7:00 PM - 10:00 PM (Available)
+
+Available slots:
+✅ 3:00 PM - 7:00 PM
+✅ 7:00 PM - 10:00 PM
+✅ 3:00 PM - 10:00 PM (entire remaining time)
+
+## Current Implementation:
+
+File: includes/functions.php - hasReservationOverlap()
+File: reservations.php - Line 35
+
+The logic is:
+```sql
+SELECT COUNT(*) FROM exclusive_reservations
+WHERE court_id = ? AND reservation_date = ?
+AND status NOT IN ('rejected')
+AND start_time < ? AND end_time > ?
+```
+
+This SQL query detects ANY overlap between existing reservations and the new requested time slot.
+
+## User Experience:
+
+When a user tries to book an overlapping time:
+- Error message: "This time slot overlaps with an existing reservation. Please choose another time."
+- User must select a different time that doesn't overlap
+
+## Admin Walk-in Bookings:
+
+The same overlap prevention applies to admin walk-in bookings (admin/reservations.php).
+
+## Status Note:
+
+✅ WORKING CORRECTLY - No changes needed
+The system already prevents all overlapping reservations as described in your requirements.
