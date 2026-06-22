@@ -204,6 +204,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if (isset($_POST['bulk_approve_pending'])) {
+        // Bulk approve all pending registrations with paid status
+        $stmt = $db->prepare(
+            'UPDATE open_play_registrations 
+             SET status = \'approved\' 
+             WHERE status = \'pending\' 
+             AND id IN (
+                 SELECT registration_id FROM payments WHERE payment_status = \'paid\'
+             )'
+        );
+        $stmt->execute();
+        $approvedCount = $stmt->rowCount();
+        
+        if ($approvedCount > 0) {
+            flash('success', "Bulk approved {$approvedCount} pending registration(s) with paid status.");
+        } else {
+            flash('info', 'No pending registrations with paid status found to approve.');
+        }
+        header('Location: open-play.php');
+        exit;
+    }
+
     if (isset($_POST['reject_registration'])) {
         $db->prepare('UPDATE open_play_registrations SET status = \'rejected\' WHERE id = ?')
             ->execute([(int) $_POST['registration_id']]);
@@ -619,7 +641,16 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <div class="card">
-                <div class="card-header"><h3>Registrations</h3></div>
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">Registrations</h3>
+                    <form method="POST" style="margin: 0;">
+                        <?= csrfField() ?>
+                        <button type="submit" name="bulk_approve_pending" class="btn btn-sm btn-success" 
+                                onclick="return confirm('Approve all PENDING registrations with PAID status?\n\nThis will automatically approve all pending registrations that have already been marked as paid.')">
+                            ✓ Approve All Pending (Paid)
+                        </button>
+                    </form>
+                </div>
                 <div class="card-body table-wrap">
                     <table class="data-table">
                         <thead>
