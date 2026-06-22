@@ -1,0 +1,316 @@
+================================================================================
+EMAIL TESTING TOOL - QUICK START
+================================================================================
+Created: June 22, 2026
+
+✅ EMAIL TESTER CREATED: test_email.php
+
+================================================================================
+QUICK ACCESS URLS
+================================================================================
+
+LOCAL (XAMPP):
+--------------
+http://localhost/PandaPickle/test_email.php?key=pandapickle2026
+
+RENDER (PRODUCTION):
+--------------------
+https://pandapickle.onrender.com/test_email.php?key=pandapickle2026
+
+⚠️ IMPORTANT: The ?key=pandapickle2026 parameter is REQUIRED for security!
+
+================================================================================
+WHAT THIS TOOL DOES
+================================================================================
+
+✅ Shows current Brevo SMTP configuration status
+✅ Displays whether environment variables are set correctly
+✅ Provides a simple form to test email delivery
+✅ Sends a professional test email using the same functions as production
+✅ Shows detailed success/error messages
+✅ Works on both local (XAMPP) and Render environments
+
+================================================================================
+HOW TO USE ON RENDER (3 SIMPLE STEPS)
+================================================================================
+
+STEP 1: Add Environment Variables to Render
+--------------------------------------------
+1. Go to Render Dashboard: https://dashboard.render.com/
+2. Select your PandaPickle web service
+3. Go to: Environment → Environment Variables
+4. Click "Add Environment Variable" and add these THREE variables:
+
+   Variable 1:
+   Key:   BREVO_SMTP_USER
+   Value: [Your Brevo SMTP user]
+
+   Variable 2:
+   Key:   BREVO_SMTP_PASS
+   Value: [Your Brevo SMTP API key]
+
+   Variable 3:
+   Key:   BREVO_FROM_EMAIL
+   Value: [Your verified sender email]
+
+5. Click "Save Changes"
+6. Wait for Render to redeploy (usually 2-3 minutes)
+
+⚠️ NOTE: Get actual values from your .env file or Brevo dashboard
+
+STEP 2: Open the Email Tester
+------------------------------
+1. Open browser
+2. Go to: https://pandapickle.onrender.com/test_email.php?key=pandapickle2026
+3. You'll see a professional testing interface
+
+STEP 3: Send Test Email
+------------------------
+1. Enter your email address (e.g., naningb16@gmail.com)
+2. Click "Send Test Email"
+3. Check your inbox (and spam folder!)
+4. You should receive a professional HTML email within 1-2 minutes
+
+================================================================================
+WHAT YOU'LL SEE
+================================================================================
+
+The tester page shows:
+
+📊 CONFIGURATION STATUS:
+   - SMTP User: ✅ af94af001@smtp-brevo.com
+   - SMTP Pass: ✅ Set (hidden)
+   - From Email: ✅ naningb16@gmail.com
+   - Status: ✅ Configuration OK
+
+📧 TEST FORM:
+   - Email input field
+   - Send button
+   - Clear instructions
+
+✅ SUCCESS MESSAGE (if it works):
+   "Email Sent Successfully! 
+    A test email has been sent to [your-email]
+    Check your inbox (and spam folder!)"
+
+❌ ERROR MESSAGE (if it fails):
+   "Email Failed to Send
+    There was an error sending the test email.
+    Troubleshooting: [specific suggestions]"
+
+================================================================================
+THE TEST EMAIL YOU'LL RECEIVE
+================================================================================
+
+Subject: PandaPickle - Test Email from Render
+
+Content:
+--------
+🏓 PandaPickle
+Email Test Successful!
+
+Congratulations! Your Brevo SMTP email configuration is working correctly.
+
+✅ Test Details:
+Sent From: naningb16@gmail.com
+Sent To: [your email]
+Test Time: [timestamp]
+SMTP Server: smtp-relay.brevo.com (Port 587)
+
+This test email confirms that:
+✅ Brevo SMTP credentials are configured correctly
+✅ TLS connection is working
+✅ Email delivery is functional
+✅ HTML email rendering is working
+
+Your PandaPickle booking confirmation emails will work just like this!
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+IF YOU SEE "Configuration Error":
+----------------------------------
+❌ Problem: Environment variables not set in Render
+✅ Solution:
+   1. Go to Render Dashboard
+   2. Check Environment Variables section
+   3. Verify all three variables are present
+   4. Check for typos in variable names (must be exact!)
+   5. Wait for Render to finish redeploying
+
+IF YOU SEE "Email Failed to Send":
+-----------------------------------
+❌ Problem: SMTP connection or authentication failed
+✅ Solutions:
+   1. Check Render logs for detailed error message
+   2. Verify SMTP password is correct (no spaces)
+   3. Check Brevo dashboard: https://app.brevo.com/
+   4. Verify sender email is verified in Brevo
+   5. Check if daily limit (300 emails) is reached
+
+IF EMAIL NOT RECEIVED:
+----------------------
+❌ Problem: Email sent but not in inbox
+✅ Solutions:
+   1. Check spam/junk folder (most common!)
+   2. Wait 2-5 minutes (sometimes delayed)
+   3. Check Brevo dashboard → Statistics for delivery status
+   4. Verify email address is spelled correctly
+   5. Try different email address (Gmail, Yahoo, etc.)
+
+================================================================================
+TESTING CHECKLIST
+================================================================================
+
+Before Testing:
+□ Environment variables added to Render
+□ Render has finished redeploying
+□ Sender email verified in Brevo (if required)
+
+During Testing:
+□ Access URL includes ?key=pandapickle2026
+□ Configuration shows all green checkmarks
+□ Enter valid email address
+□ Click "Send Test Email" button
+
+After Testing:
+□ Check email inbox within 2 minutes
+□ Check spam/junk folder
+□ Verify email looks professional
+□ Verify all details are correct
+□ Check Brevo dashboard for delivery stats
+
+================================================================================
+SUCCESS CRITERIA
+================================================================================
+
+✅ Your test is SUCCESSFUL if:
+   1. Configuration page shows all green checkmarks
+   2. "Email Sent Successfully" message appears
+   3. Email arrives in inbox within 2 minutes
+   4. Email looks professional with PandaPickle branding
+   5. Email is not in spam folder (or moved from spam works fine)
+
+🎉 If all above are true: Your email system is FULLY OPERATIONAL!
+
+================================================================================
+WHAT TO DO AFTER SUCCESSFUL TEST
+================================================================================
+
+1. ✅ Email system is confirmed working
+2. ✅ Production booking confirmations will work
+3. ✅ No further configuration needed
+
+Optional:
+□ Delete test_email.php file (for security)
+□ Test full booking flow (create reservation → verify payment → check email)
+□ Monitor Brevo dashboard for email statistics
+
+================================================================================
+MONITORING EMAIL DELIVERY
+================================================================================
+
+Brevo Dashboard:
+https://app.brevo.com/ → Statistics → Email
+
+You can see:
+- Total emails sent today
+- Delivery rate
+- Open rate
+- Bounced emails
+- Spam complaints
+
+This helps you monitor email health over time!
+
+================================================================================
+FILES CREATED
+================================================================================
+
+✅ test_email.php - Email testing script
+✅ EMAIL_TESTER_GUIDE.txt - Detailed usage guide
+✅ EMAIL_TEST_SUMMARY.txt - This quick start guide
+
+================================================================================
+SECURITY NOTES
+================================================================================
+
+🔒 The tester requires ?key=pandapickle2026 in URL for basic security
+
+🔒 Environment variables are never displayed (only status OK/Not OK)
+
+🔒 SMTP password is shown as "Set (hidden)" for security
+
+🔒 Can be safely committed to Git (no sensitive data hardcoded)
+
+🔒 Optional: Delete test_email.php after testing for extra security
+
+🔒 Optional: Change the test key to something more secure
+
+================================================================================
+SUPPORT
+================================================================================
+
+If issues persist after checking everything:
+
+1. Check Render Logs:
+   Render Dashboard → Select Service → Logs tab
+   Look for: PHP errors, SMTP errors, connection errors
+
+2. Check Brevo Status:
+   https://app.brevo.com/ → Account → API Keys & SMTP
+   Verify: SMTP key is active, account is in good standing
+
+3. Test Locally First:
+   http://localhost/PandaPickle/test_email.php?key=pandapickle2026
+   If works locally but not Render = environment variable issue
+
+4. Verify Credentials:
+   Double-check all environment variables
+   Copy-paste from this guide to avoid typos
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+After successful email test:
+
+1. ✅ Test full booking flow in production
+   - Register user on Render
+   - Create reservation
+   - Upload payment receipt
+   - Login as admin
+   - Verify payment
+   - Check if email is received
+
+2. ✅ Import database schema to Render PostgreSQL
+   - Run schema.sql
+   - Run all migration files
+
+3. ✅ Configure payment settings in admin panel
+   - GCash number and name
+   - Bank account details
+   - Payment instructions
+
+4. ✅ Go live!
+   - Share website URL with customers
+   - Monitor Brevo dashboard for email stats
+   - Monitor Render logs for any issues
+
+================================================================================
+READY TO TEST!
+================================================================================
+
+Your email tester is ready to use!
+
+🚀 RENDER TEST URL:
+https://pandapickle.onrender.com/test_email.php?key=pandapickle2026
+
+💻 LOCAL TEST URL:
+http://localhost/PandaPickle/test_email.php?key=pandapickle2026
+
+Good luck! 🍀
+
+================================================================================
+END OF EMAIL TEST SUMMARY
+================================================================================

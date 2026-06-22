@@ -1,0 +1,261 @@
+================================================================================
+EMAIL TESTER GUIDE - PandaPickle
+================================================================================
+
+WHAT IS THIS?
+-------------
+test_email.php is a simple testing script that lets you verify your Brevo SMTP
+email configuration is working correctly on both local and Render environments.
+
+================================================================================
+HOW TO USE - LOCAL (XAMPP)
+================================================================================
+
+1. Make sure Apache is running in XAMPP
+
+2. Open your browser and go to:
+   http://localhost/PandaPickle/test_email.php?key=pandapickle2026
+
+3. You'll see a page showing:
+   - Current email configuration status
+   - A form to enter your test email address
+
+4. Enter your email address (e.g., naningb16@gmail.com)
+
+5. Click "Send Test Email"
+
+6. Check your email inbox (and spam folder!)
+
+7. You should receive a professional test email from PandaPickle
+
+================================================================================
+HOW TO USE - RENDER (PRODUCTION)
+================================================================================
+
+STEP 1: Add Environment Variables to Render
+--------------------------------------------
+Before testing on Render, make sure you've added these environment variables:
+
+1. Go to: https://dashboard.render.com/
+2. Select your PandaPickle web service
+3. Go to: Environment → Environment Variables
+4. Add these three variables:
+
+   Key: BREVO_SMTP_USER
+   Value: [Your Brevo SMTP user from dashboard]
+
+   Key: BREVO_SMTP_PASS
+   Value: [Your Brevo SMTP API key from dashboard]
+
+   Key: BREVO_FROM_EMAIL
+   Value: [Your verified sender email]
+
+⚠️ NOTE: Get actual values from your .env file or Brevo dashboard
+
+5. Click "Save Changes" and wait for Render to redeploy
+
+STEP 2: Test Email on Render
+-----------------------------
+1. Open your browser and go to:
+   https://pandapickle.onrender.com/test_email.php?key=pandapickle2026
+
+2. You'll see the email tester page with configuration status
+
+3. Enter your email address (e.g., naningb16@gmail.com)
+
+4. Click "Send Test Email"
+
+5. Check your email inbox (and spam folder!)
+
+6. You should receive the test email within 1-2 minutes
+
+================================================================================
+WHAT THE TESTER CHECKS
+================================================================================
+
+✅ Environment Variables
+   - BREVO_SMTP_USER is set
+   - BREVO_SMTP_PASS is set
+   - BREVO_FROM_EMAIL is set
+
+✅ SMTP Connection
+   - Connects to smtp-relay.brevo.com on port 587
+   - Establishes TLS encryption
+   - Authenticates with Brevo credentials
+
+✅ Email Delivery
+   - Sends a professional HTML email
+   - Uses PandaPickle branding
+   - Tests the same email functions used in production
+
+================================================================================
+INTERPRETING RESULTS
+================================================================================
+
+SUCCESS (✅ Email Sent Successfully!)
+-------------------------------------
+- Your Brevo SMTP configuration is correct
+- Email delivery is working
+- Booking confirmation emails will work in production
+- You can proceed with confidence!
+
+FAILURE (❌ Email Failed to Send)
+---------------------------------
+Check these common issues:
+
+1. Configuration Missing:
+   - Verify all three environment variables are set in Render
+   - Check for typos in variable names (must be exact)
+   - Wait for Render to finish redeploying after adding variables
+
+2. SMTP Authentication Failed:
+   - Verify SMTP password is correct (no spaces)
+   - Check Brevo dashboard for account status
+   - Try regenerating SMTP key in Brevo
+
+3. Sender Email Not Verified:
+   - Login to Brevo: https://app.brevo.com/
+   - Go to: Senders & IP
+   - Check if naningb16@gmail.com is verified
+   - Click verification link in email if needed
+
+4. Daily Limit Reached:
+   - Brevo free tier: 300 emails/day
+   - Check Brevo dashboard → Statistics
+   - Wait until next day or upgrade plan
+
+================================================================================
+SECURITY NOTE
+================================================================================
+
+⚠️ IMPORTANT: DELETE THIS FILE AFTER TESTING!
+
+The test_email.php file is only meant for initial testing.
+While it has basic security (requires ?key=pandapickle2026 in URL),
+it should be removed from production for security best practices.
+
+TO DELETE:
+----------
+1. Remove from local:
+   Delete: C:\xampp\htdocs\PandaPickle\test_email.php
+
+2. Remove from Git:
+   git rm test_email.php
+   git commit -m "Remove email tester after testing"
+   git push
+
+3. Render will automatically remove it on next deploy
+
+OR: Just leave it and change the test key to something more secure!
+
+================================================================================
+ALTERNATIVE TESTING METHOD
+================================================================================
+
+If you prefer not to use the tester script, you can test emails manually:
+
+1. Create a real reservation on your website
+2. Upload a payment receipt
+3. Login as admin
+4. Go to Manage Payments
+5. Click "Verify Paid"
+6. Check if customer receives confirmation email
+
+This tests the entire booking flow end-to-end!
+
+================================================================================
+MONITORING EMAIL DELIVERY
+================================================================================
+
+Brevo Dashboard:
+----------------
+1. Login: https://app.brevo.com/
+2. Go to: Statistics → Email
+3. See real-time data:
+   - Emails sent today
+   - Delivery rate
+   - Open rate
+   - Bounce rate
+   - Spam complaints
+
+You can track every email sent and see if it was delivered successfully!
+
+================================================================================
+TROUBLESHOOTING CHECKLIST
+================================================================================
+
+□ Environment variables are set in Render dashboard
+□ Render has finished redeploying after adding variables
+□ Sender email (naningb16@gmail.com) is verified in Brevo
+□ SMTP key is correct (no spaces, exact copy)
+□ Brevo account is active and in good standing
+□ Not exceeding 300 emails per day limit
+□ Test email address is valid and accessible
+□ Checked spam/junk folder for test email
+□ Checked Render logs for error messages
+□ Checked Brevo dashboard for delivery status
+
+================================================================================
+EXAMPLE SUCCESS SCREEN
+================================================================================
+
+When it works, you'll see:
+
+🔧 Current Configuration
+SMTP User:    ✅ af94af001@smtp-brevo.com
+SMTP Pass:    ✅ Set (hidden)
+From Email:   ✅ naningb16@gmail.com
+Status:       ✅ Configuration OK
+
+[Enter email form]
+
+After clicking "Send Test Email":
+
+✅ Email Sent Successfully!
+A test email has been sent to naningb16@gmail.com
+
+Next Steps:
+1. Check your inbox (and spam folder!)
+2. Verify the email looks professional
+3. Confirm all details are correct
+
+================================================================================
+SUPPORT
+================================================================================
+
+If you continue having issues after checking everything:
+
+1. Check Render logs:
+   - Render Dashboard → Logs tab
+   - Look for PHP errors or SMTP errors
+
+2. Check Brevo logs:
+   - Brevo Dashboard → Logs
+   - See if emails are being received by Brevo
+
+3. Test locally first:
+   - If it works locally but not on Render
+   - Issue is likely with Render environment variables
+
+4. Verify credentials:
+   - Double-check all three environment variables
+   - No extra spaces or line breaks
+   - Exact copy-paste from this guide
+
+================================================================================
+WHAT HAPPENS AFTER SUCCESSFUL TEST?
+================================================================================
+
+Once the test email is working:
+
+✅ Your email system is fully operational
+✅ Booking confirmations will be sent automatically
+✅ Customers will receive professional HTML emails
+✅ Emails will include booking details and instructions
+✅ Email delivery is reliable via Brevo infrastructure
+
+You're ready to go live! 🚀
+
+================================================================================
+END OF EMAIL TESTER GUIDE
+================================================================================
