@@ -1,5 +1,8 @@
 <?php
 
+// Load environment variables from .env file (for local development)
+require_once __DIR__ . '/load_env.php';
+
 // Security Configuration - Disable error display in production
 if (getenv('RENDER') || getenv('APP_ENV') === 'production') {
     ini_set('display_errors', '0');
