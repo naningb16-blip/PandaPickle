@@ -137,6 +137,16 @@
             </div>
             
             <div class="info-row">
+                <span class="label">BREVO_API_KEY:</span>
+                <span class="value">
+                    <?php
+                    $apiKey = getenv('BREVO_API_KEY');
+                    echo $apiKey ? '<span class="status-ok">✅ Set (hidden)</span>' : '<span class="status-error">❌ Not set</span>';
+                    ?>
+                </span>
+            </div>
+            
+            <div class="info-row">
                 <span class="label">BREVO_FROM_EMAIL:</span>
                 <span class="value">
                     <?php
