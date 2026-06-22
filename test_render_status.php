@@ -141,7 +141,13 @@
                 <span class="value">
                     <?php
                     $apiKey = getenv('BREVO_API_KEY');
-                    echo $apiKey ? '<span class="status-ok">✅ Set (hidden)</span>' : '<span class="status-error">❌ Not set</span>';
+                    if ($apiKey) {
+                        // Show first 15 chars to verify it starts with "xkeysib-"
+                        $preview = substr($apiKey, 0, 15) . '...';
+                        echo '<span class="status-ok">✅ ' . htmlspecialchars($preview) . '</span>';
+                    } else {
+                        echo '<span class="status-error">❌ Not set</span>';
+                    }
                     ?>
                 </span>
             </div>
