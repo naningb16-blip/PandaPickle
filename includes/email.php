@@ -12,13 +12,14 @@
 function sendBrevoEmail(string $toEmail, string $toName, string $subject, string $htmlContent): bool
 {
     // Get Brevo credentials from environment variables
+    $apiKey = getenv('BREVO_API_KEY') ?: getenv('BREVO_SMTP_PASS') ?: '';
     $smtpUser = getenv('BREVO_SMTP_USER') ?: '';
     $smtpPass = getenv('BREVO_SMTP_PASS') ?: '';
     $fromEmail = getenv('BREVO_FROM_EMAIL') ?: 'noreply@pandapickle.com';
     $fromName = 'PandaPickle';
     
     // If credentials not set, fall back to PHP mail()
-    if (empty($smtpUser) || empty($smtpPass)) {
+    if (empty($apiKey) && empty($smtpUser)) {
         error_log('Brevo credentials not set, falling back to PHP mail()');
         $headers = [
             'MIME-Version: 1.0',
@@ -30,13 +31,19 @@ function sendBrevoEmail(string $toEmail, string $toName, string $subject, string
     }
     
     // Try Brevo API first (works when SMTP ports are blocked)
-    $apiResult = sendBrevoAPI($toEmail, $toName, $subject, $htmlContent, $smtpPass, $fromEmail, $fromName);
-    if ($apiResult === true) {
-        return true;
+    if (!empty($apiKey)) {
+        $apiResult = sendBrevoAPI($toEmail, $toName, $subject, $htmlContent, $apiKey, $fromEmail, $fromName);
+        if ($apiResult === true) {
+            return true;
+        }
     }
     
     // If API fails, try SMTP
-    return sendBrevoSMTP($toEmail, $toName, $subject, $htmlContent, $smtpUser, $smtpPass, $fromEmail, $fromName);
+    if (!empty($smtpUser) && !empty($smtpPass)) {
+        return sendBrevoSMTP($toEmail, $toName, $subject, $htmlContent, $smtpUser, $smtpPass, $fromEmail, $fromName);
+    }
+    
+    return false;
 }
 
 /**
