@@ -18,13 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($payment && in_array($action, ['paid', 'rejected'], true)) {
         if ($action === 'paid') {
+            // Update payment status to paid
             $db->prepare(
                 'UPDATE payments SET payment_status = \'paid\', verified_by = ?, verified_at = NOW() WHERE id = ?'
             )->execute([$admin['id'], $paymentId]);
             
-            // Send confirmation email to customer
+            // Auto-approve the reservation or registration
             if ($payment['reservation_id']) {
-                // Exclusive reservation
+                // Approve exclusive reservation
+                $db->prepare('UPDATE exclusive_reservations SET status = \'approved\' WHERE id = ?')
+                   ->execute([$payment['reservation_id']]);
+                
+                // Fetch reservation details for email
                 $resStmt = $db->prepare(
                     'SELECT r.*, c.court_name, u.email, u.fullname 
                      FROM exclusive_reservations r
@@ -47,7 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     sendBookingConfirmationEmail($bookingData, $reservation['email'], $reservation['fullname']);
                 }
             } elseif ($payment['registration_id']) {
-                // Open play registration
+                // Approve open play registration
+                $db->prepare('UPDATE open_play_registrations SET status = \'approved\' WHERE id = ?')
+                   ->execute([$payment['registration_id']]);
+                
+                // Fetch registration details for email
                 $regStmt = $db->prepare(
                     'SELECT reg.*, s.title, s.session_date, s.start_time, u.email, u.fullname
                      FROM open_play_registrations reg
@@ -71,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             
-            flash('success', 'Payment verified as paid. Confirmation email sent to customer.');
+            flash('success', 'Payment verified as PAID. Booking/Registration AUTO-APPROVED and confirmation email sent to customer.');
         } else {
             $db->prepare(
                 'UPDATE payments SET payment_status = \'rejected\', verified_by = ?, verified_at = NOW() WHERE id = ?'
