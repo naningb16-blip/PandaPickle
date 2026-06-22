@@ -6,13 +6,12 @@
  */
 
 /**
- * Send email via Brevo SMTP
+ * Send email via Brevo SMTP or API
+ * Falls back to API if SMTP fails (e.g., port 587 blocked on Render)
  */
 function sendBrevoEmail(string $toEmail, string $toName, string $subject, string $htmlContent): bool
 {
-    // Get Brevo SMTP credentials from environment variables
-    $smtpHost = 'smtp-relay.brevo.com';
-    $smtpPort = 587; // Use 587 for TLS
+    // Get Brevo credentials from environment variables
     $smtpUser = getenv('BREVO_SMTP_USER') ?: '';
     $smtpPass = getenv('BREVO_SMTP_PASS') ?: '';
     $fromEmail = getenv('BREVO_FROM_EMAIL') ?: 'noreply@pandapickle.com';
@@ -29,6 +28,77 @@ function sendBrevoEmail(string $toEmail, string $toName, string $subject, string
         ];
         return mail($toEmail, $subject, $htmlContent, implode("\r\n", $headers));
     }
+    
+    // Try Brevo API first (works when SMTP ports are blocked)
+    $apiResult = sendBrevoAPI($toEmail, $toName, $subject, $htmlContent, $smtpPass, $fromEmail, $fromName);
+    if ($apiResult === true) {
+        return true;
+    }
+    
+    // If API fails, try SMTP
+    return sendBrevoSMTP($toEmail, $toName, $subject, $htmlContent, $smtpUser, $smtpPass, $fromEmail, $fromName);
+}
+
+/**
+ * Send email via Brevo API (works when SMTP ports are blocked)
+ */
+function sendBrevoAPI(string $toEmail, string $toName, string $subject, string $htmlContent, string $apiKey, string $fromEmail, string $fromName): bool
+{
+    $url = 'https://api.brevo.com/v3/smtp/email';
+    
+    $data = [
+        'sender' => [
+            'name' => $fromName,
+            'email' => $fromEmail
+        ],
+        'to' => [
+            [
+                'email' => $toEmail,
+                'name' => $toName
+            ]
+        ],
+        'subject' => $subject,
+        'htmlContent' => $htmlContent
+    ];
+    
+    $options = [
+        'http' => [
+            'header' => [
+                "Content-Type: application/json",
+                "api-key: {$apiKey}"
+            ],
+            'method' => 'POST',
+            'content' => json_encode($data),
+            'timeout' => 30
+        ]
+    ];
+    
+    $context = stream_context_create($options);
+    $result = @file_get_contents($url, false, $context);
+    
+    if ($result !== false) {
+        $response = json_decode($result, true);
+        if (isset($response['messageId'])) {
+            error_log("Brevo API: Email sent successfully via API (messageId: {$response['messageId']})");
+            return true;
+        }
+    }
+    
+    // Log error for debugging
+    if (isset($http_response_header)) {
+        error_log("Brevo API failed: " . implode(', ', $http_response_header));
+    }
+    
+    return false;
+}
+
+/**
+ * Send email via Brevo SMTP (original method)
+ */
+function sendBrevoSMTP(string $toEmail, string $toName, string $subject, string $htmlContent, string $smtpUser, string $smtpPass, string $fromEmail, string $fromName): bool
+{
+    $smtpHost = 'smtp-relay.brevo.com';
+    $smtpPort = 587;
     
     // Create email message
     $boundary = md5(uniqid(time()));
@@ -52,10 +122,10 @@ function sendBrevoEmail(string $toEmail, string $toName, string $subject, string
     $message .= "--{$boundary}--";
     
     // Connect to Brevo SMTP server
-    $smtp = fsockopen($smtpHost, $smtpPort, $errno, $errstr, 30);
+    $smtp = @fsockopen($smtpHost, $smtpPort, $errno, $errstr, 10);
     
     if (!$smtp) {
-        error_log("Brevo SMTP connection failed: {$errstr} ({$errno})");
+        error_log("Brevo SMTP connection failed: {$errstr} ({$errno}) - Falling back to API");
         return false;
     }
     
@@ -113,6 +183,7 @@ function sendBrevoEmail(string $toEmail, string $toName, string $subject, string
     fgets($smtp, 515);
     
     fclose($smtp);
+    error_log("Brevo SMTP: Email sent successfully via SMTP");
     return true;
 }
 
