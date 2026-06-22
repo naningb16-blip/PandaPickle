@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
                     }
                 }
                 
-                flash('success', 'Receipt uploaded successfully! Your payment is now pending admin verification.');
+                flash('success', 'Receipt uploaded successfully! Your booking is pending. Please check your email from time to time for confirmation.');
                 header('Location: dashboard.php');
                 exit;
             }

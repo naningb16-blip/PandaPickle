@@ -1,0 +1,175 @@
+==============================================
+EMAIL NOTIFICATIONS SYSTEM
+==============================================
+
+Date: June 21, 2026
+Status: ✅ IMPLEMENTED
+
+WORKFLOW:
+---------
+
+1. USER UPLOADS RECEIPT:
+   └─> User clicks "Pay Now" button on dashboard
+   └─> Goes to payment-info.php
+   └─> Uploads payment receipt image
+   └─> Message shows: "Receipt uploaded successfully! Your booking is pending. Please check your email from time to time for confirmation."
+   └─> Receipt stored in Cloudinary
+   └─> Payment status: "pending_verification"
+
+2. ADMIN VERIFIES PAYMENT:
+   └─> Admin goes to Payments page (admin/payments.php)
+   └─> Reviews uploaded receipt
+   └─> Clicks "Verify Paid" button
+   └─> Payment status changes to: "paid"
+   └─> ✉️ CONFIRMATION EMAIL SENT TO CUSTOMER
+
+3. CUSTOMER RECEIVES EMAIL:
+   Subject: "PandaPickle - Booking Confirmed #RES-XXXXXX"
+   
+   Content:
+   ┌──────────────────────────────────────────────┐
+   │  🏓 PandaPickle                              │
+   │  Booking Confirmed!                          │
+   ├──────────────────────────────────────────────┤
+   │  Dear [Customer Name],                       │
+   │                                              │
+   │  Your booking has been confirmed!            │
+   │                                              │
+   │  Booking Details:                            │
+   │  • Booking Code: RES-XXXXXX                  │
+   │  • Court: Court 1                            │
+   │  • Date & Time: June 22, 2026 at 10:00 AM   │
+   │  • Duration: 2 hour(s)                       │
+   │  • Total Amount: PHP 500.00                  │
+   │                                              │
+   │  ⚠️ IMPORTANT:                                │
+   │  Please arrive at the court BEFORE 10:00 AM  │
+   │  Show this email to the cashier              │
+   │  for confirmation.                           │
+   │                                              │
+   │  We look forward to seeing you!              │
+   ├──────────────────────────────────────────────┤
+   │  Please disregard this email and don't reply │
+   │  © 2026 PandaPickle. All rights reserved.    │
+   └──────────────────────────────────────────────┘
+
+FILES CREATED/MODIFIED:
+-----------------------
+
+✅ includes/email.php (NEW)
+   - sendBookingConfirmationEmail() - Sends email for exclusive reservations
+   - sendOpenPlayConfirmationEmail() - Sends email for open play registrations
+   - HTML email templates with booking details
+   - Professional styling
+
+✅ payment-info.php (MODIFIED)
+   - Updated success message after receipt upload
+   - Shows: "Your booking is pending. Please check your email from time to time for confirmation."
+
+✅ admin/payments.php (MODIFIED)
+   - Added: require_once __DIR__ . '/../includes/email.php';
+   - Sends confirmation email when admin clicks "Verify Paid"
+   - Fetches booking/registration details from database
+   - Constructs email data and sends to customer
+   - Success message updated to confirm email sent
+
+EMAIL FUNCTIONS:
+----------------
+
+sendBookingConfirmationEmail($bookingData, $customerEmail, $customerName)
+Parameters:
+  $bookingData = [
+      'code' => 'RES-20260622-ABC123',
+      'court' => 'Court 1',
+      'date' => '2026-06-22',
+      'start_time' => '10:00:00',
+      'hours' => '2',
+      'amount' => '500.00'
+  ]
+  $customerEmail = 'customer@example.com'
+  $customerName = 'John Doe'
+Returns: true if email sent successfully, false otherwise
+
+sendOpenPlayConfirmationEmail($regData, $customerEmail, $customerName)
+Parameters:
+  $regData = [
+      'title' => 'Friday Night Open Play',
+      'session_date' => '2026-06-22',
+      'start_time' => '18:00:00',
+      'player1' => 'John',
+      'player2' => 'Jane',
+      'amount' => '100.00'
+  ]
+  $customerEmail = 'customer@example.com'
+  $customerName = 'John Doe'
+Returns: true if email sent successfully, false otherwise
+
+EMAIL CONFIGURATION:
+--------------------
+
+**FOR LOCAL XAMPP:**
+PHP's mail() function won't work on localhost by default.
+You have two options:
+
+Option 1: Use a test email service (recommended for testing)
+- Install a local SMTP server (e.g., Papercut, MailHog)
+- Or use a service like Mailtrap.io for testing
+
+Option 2: Configure XAMPP to send real emails
+- Edit php.ini:
+  [mail function]
+  SMTP = smtp.gmail.com
+  smtp_port = 587
+  sendmail_from = your-email@gmail.com
+  auth_username = your-email@gmail.com
+  auth_password = your-app-password
+
+**FOR RENDER (PRODUCTION):**
+Render supports PHP's mail() function out of the box.
+Emails will be sent from the server's sendmail.
+
+IMPORTANT NOTES:
+----------------
+⚠️ Email delivery is not guaranteed with PHP mail()
+⚠️ Emails may go to spam folders
+⚠️ For production, consider using a service like:
+   - SendGrid (free tier: 100 emails/day)
+   - Mailgun (free tier: 5,000 emails/month)
+   - AWS SES (pay as you go)
+
+TESTING:
+--------
+1. Upload a receipt as a customer
+2. Check that message shows: "Your booking is pending..."
+3. As admin, verify the payment
+4. Check if email was sent (check spam folder)
+5. Verify email contains correct booking details
+
+TROUBLESHOOTING:
+----------------
+❌ Emails not sending on localhost
+   → This is normal. Configure SMTP or use Mailtrap for testing
+
+❌ Emails going to spam
+   → Add SPF and DKIM records to your domain
+   → Use a reputable email service (SendGrid, Mailgun)
+
+❌ Function sendBookingConfirmationEmail() not found
+   → Make sure includes/email.php is included at top of file
+
+❌ Email sent but customer didn't receive it
+   → Check spam folder
+   → Verify customer's email address is correct in database
+   → Check server mail logs
+
+FUTURE IMPROVEMENTS:
+--------------------
+□ Use a dedicated email service (SendGrid/Mailgun)
+□ Add email queue system for reliability
+□ Add email templates for different languages
+□ Add email tracking (opened, clicked)
+□ Add unsubscribe option
+□ Send reminder emails before booking time
+□ Send feedback request after booking completed
+
+==============================================

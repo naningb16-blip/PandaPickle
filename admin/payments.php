@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/email.php';
 requireAdmin();
 
 $db = getDB();
@@ -20,7 +21,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->prepare(
                 'UPDATE payments SET payment_status = \'paid\', verified_by = ?, verified_at = NOW() WHERE id = ?'
             )->execute([$admin['id'], $paymentId]);
-            flash('success', 'Payment verified as paid.');
+            
+            // Send confirmation email to customer
+            if ($payment['reservation_id']) {
+                // Exclusive reservation
+                $resStmt = $db->prepare(
+                    'SELECT r.*, c.court_name, u.email, u.fullname 
+                     FROM exclusive_reservations r
+                     JOIN courts c ON c.id = r.court_id
+                     JOIN users u ON u.id = r.user_id
+                     WHERE r.id = ?'
+                );
+                $resStmt->execute([$payment['reservation_id']]);
+                $reservation = $resStmt->fetch();
+                
+                if ($reservation) {
+                    $bookingData = [
+                        'code' => $reservation['reservation_code'],
+                        'court' => $reservation['court_name'],
+                        'date' => $reservation['reservation_date'],
+                        'start_time' => $reservation['start_time'],
+                        'hours' => $reservation['hours_reserved'],
+                        'amount' => number_format($reservation['total_amount'], 2)
+                    ];
+                    sendBookingConfirmationEmail($bookingData, $reservation['email'], $reservation['fullname']);
+                }
+            } elseif ($payment['registration_id']) {
+                // Open play registration
+                $regStmt = $db->prepare(
+                    'SELECT reg.*, s.title, s.session_date, s.start_time, u.email, u.fullname
+                     FROM open_play_registrations reg
+                     JOIN open_play_sessions s ON s.id = reg.session_id
+                     JOIN users u ON u.id = reg.user_id
+                     WHERE reg.id = ?'
+                );
+                $regStmt->execute([$payment['registration_id']]);
+                $registration = $regStmt->fetch();
+                
+                if ($registration) {
+                    $regData = [
+                        'title' => $registration['title'],
+                        'session_date' => $registration['session_date'],
+                        'start_time' => $registration['start_time'],
+                        'player1' => $registration['user_name'],
+                        'player2' => $registration['partner_name'],
+                        'amount' => number_format($registration['total_amount'], 2)
+                    ];
+                    sendOpenPlayConfirmationEmail($regData, $registration['email'], $registration['fullname']);
+                }
+            }
+            
+            flash('success', 'Payment verified as paid. Confirmation email sent to customer.');
         } else {
             $db->prepare(
                 'UPDATE payments SET payment_status = \'rejected\', verified_by = ?, verified_at = NOW() WHERE id = ?'
