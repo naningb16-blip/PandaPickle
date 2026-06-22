@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/email.php';
 requireAdmin();
 
 $db = getDB();
@@ -135,10 +136,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: reservations.php');
                 exit;
             }
+            
+            // Update reservation status to approved
+            $db->prepare('UPDATE exclusive_reservations SET status = ? WHERE id = ?')->execute([$action, $id]);
+            
+            // Send confirmation email
+            $resStmt = $db->prepare(
+                'SELECT r.*, c.court_name, u.email, u.fullname 
+                 FROM exclusive_reservations r
+                 JOIN courts c ON c.id = r.court_id
+                 LEFT JOIN users u ON u.id = r.user_id
+                 WHERE r.id = ?'
+            );
+            $resStmt->execute([$id]);
+            $reservation = $resStmt->fetch();
+            
+            if ($reservation && $reservation['email']) {
+                $bookingData = [
+                    'code' => $reservation['reservation_code'],
+                    'court' => $reservation['court_name'],
+                    'date' => $reservation['reservation_date'],
+                    'start_time' => $reservation['start_time'],
+                    'hours' => $reservation['hours_reserved'],
+                    'amount' => number_format($reservation['total_amount'], 2)
+                ];
+                sendBookingConfirmationEmail($bookingData, $reservation['email'], $reservation['fullname']);
+            }
+            
+            flash('success', 'Reservation approved successfully and confirmation email sent.');
+        } else {
+            // Rejected
+            $db->prepare('UPDATE exclusive_reservations SET status = ? WHERE id = ?')->execute([$action, $id]);
+            flash('success', 'Reservation ' . $action . ' successfully.');
         }
-        
-        $db->prepare('UPDATE exclusive_reservations SET status = ? WHERE id = ?')->execute([$action, $id]);
-        flash('success', 'Reservation ' . $action . ' successfully.');
     }
     header('Location: reservations.php');
     exit;

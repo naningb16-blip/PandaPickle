@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/email.php';
 requireAdmin();
 
 $db = getDB();
@@ -196,9 +197,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$paymentData || $paymentData['payment_status'] !== 'paid') {
             flash('error', 'Cannot approve registration. Payment must be marked as "paid" first.');
         } else {
+            // Approve registration
             $db->prepare('UPDATE open_play_registrations SET status = \'approved\' WHERE id = ?')
                 ->execute([$regId]);
-            flash('success', 'Registration approved.');
+            
+            // Send confirmation email
+            $regStmt = $db->prepare(
+                'SELECT reg.*, s.title, s.session_date, s.start_time, u.email, u.fullname
+                 FROM open_play_registrations reg
+                 JOIN open_play_sessions s ON s.id = reg.session_id
+                 LEFT JOIN users u ON u.id = reg.user_id
+                 WHERE reg.id = ?'
+            );
+            $regStmt->execute([$regId]);
+            $registration = $regStmt->fetch();
+            
+            if ($registration && $registration['email']) {
+                $regData = [
+                    'title' => $registration['title'],
+                    'session_date' => $registration['session_date'],
+                    'start_time' => $registration['start_time'],
+                    'player1' => $registration['user_name'],
+                    'player2' => $registration['partner_name'],
+                    'amount' => number_format($registration['total_amount'], 2)
+                ];
+                sendOpenPlayConfirmationEmail($regData, $registration['email'], $registration['fullname']);
+            }
+            
+            flash('success', 'Registration approved and confirmation email sent.');
         }
         header('Location: open-play.php');
         exit;
