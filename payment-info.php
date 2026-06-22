@@ -13,9 +13,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
     checkCSRF();
     $uploadError = null;
     $file = $_FILES['receipt'];
+    $referenceNumber = trim($_POST['reference_number'] ?? '');
     
-    // Validate file upload
-    if ($file['error'] === UPLOAD_ERR_OK) {
+    // Validate reference number
+    if (empty($referenceNumber)) {
+        $uploadError = 'Please enter the transfer reference number.';
+        flash('error', $uploadError);
+    } else {
+        // Validate file upload
+        if ($file['error'] === UPLOAD_ERR_OK) {
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
         $maxSize = 5 * 1024 * 1024; // 5MB
         
@@ -48,17 +54,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
                         $res = $stmt->fetch();
                         
                         $stmt = $db->prepare(
-                            'INSERT INTO payments (reservation_id, payment_type, amount, payment_status, proof_image) 
-                             VALUES (?, \'reservation\', ?, \'pending_verification\', ?)'
+                            'INSERT INTO payments (reservation_id, payment_type, amount, payment_status, proof_image, reference_number) 
+                             VALUES (?, \'reservation\', ?, \'pending_verification\', ?, ?)'
                         );
-                        $stmt->execute([$reservationId, $res['total_amount'], $cloudinaryUrl]);
+                        $stmt->execute([$reservationId, $res['total_amount'], $cloudinaryUrl, $referenceNumber]);
                         $paymentId = $db->lastInsertId();
                     } else {
                         // Update existing payment record
                         $stmt = $db->prepare(
-                            'UPDATE payments SET proof_image = ?, payment_status = \'pending_verification\' WHERE id = ?'
+                            'UPDATE payments SET proof_image = ?, reference_number = ?, payment_status = \'pending_verification\' WHERE id = ?'
                         );
-                        $stmt->execute([$cloudinaryUrl, $paymentId]);
+                        $stmt->execute([$cloudinaryUrl, $referenceNumber, $paymentId]);
                     }
                 } elseif ($registrationId) {
                     $stmt = $db->prepare('SELECT id FROM payments WHERE registration_id = ?');
@@ -73,17 +79,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
                         $reg = $stmt->fetch();
                         
                         $stmt = $db->prepare(
-                            'INSERT INTO payments (registration_id, payment_type, amount, payment_status, proof_image) 
-                             VALUES (?, \'open_play\', ?, \'pending_verification\', ?)'
+                            'INSERT INTO payments (registration_id, payment_type, amount, payment_status, proof_image, reference_number) 
+                             VALUES (?, \'open_play\', ?, \'pending_verification\', ?, ?)'
                         );
-                        $stmt->execute([$registrationId, $reg['total_amount'], $cloudinaryUrl]);
+                        $stmt->execute([$registrationId, $reg['total_amount'], $cloudinaryUrl, $referenceNumber]);
                         $paymentId = $db->lastInsertId();
                     } else {
                         // Update existing payment record
                         $stmt = $db->prepare(
-                            'UPDATE payments SET proof_image = ?, payment_status = \'pending_verification\' WHERE id = ?'
+                            'UPDATE payments SET proof_image = ?, reference_number = ?, payment_status = \'pending_verification\' WHERE id = ?'
                         );
-                        $stmt->execute([$cloudinaryUrl, $paymentId]);
+                        $stmt->execute([$cloudinaryUrl, $referenceNumber, $paymentId]);
                     }
                 }
                 
@@ -288,9 +294,27 @@ require_once __DIR__ . '/includes/header.php';
                     <?php else: ?>
                         <form method="POST" enctype="multipart/form-data" style="margin-top: 1rem;">
                             <?= csrfField() ?>
+                            
                             <div class="form-group">
+                                <label for="reference_number" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                    Transfer Reference Number <span style="color: #dc2626;">*</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="reference_number" 
+                                    name="reference_number" 
+                                    required
+                                    placeholder="Enter GCash/Bank reference number"
+                                    style="display: block; width: 100%; padding: 0.75rem; border: 2px solid #059669; border-radius: 6px; font-size: 1rem;"
+                                >
+                                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                                    🔢 Example: GCASH-123456789, BDO-987654321, etc.
+                                </small>
+                            </div>
+                            
+                            <div class="form-group" style="margin-top: 1.5rem;">
                                 <label for="receipt" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
-                                    Select Receipt Image (JPG, PNG, GIF - Max 5MB)
+                                    Payment Receipt/Screenshot <span style="color: #dc2626;">*</span>
                                 </label>
                                 <input 
                                     type="file" 
@@ -301,12 +325,12 @@ require_once __DIR__ . '/includes/header.php';
                                     style="display: block; width: 100%; padding: 0.5rem; border: 2px solid #059669; border-radius: 6px;"
                                 >
                                 <small style="color: #666; display: block; margin-top: 0.5rem;">
-                                    📸 Take a clear photo of your payment receipt or screenshot
+                                    📸 JPG, PNG, GIF - Max 5MB
                                 </small>
                             </div>
                             
-                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; background: #059669; padding: 0.75rem;">
-                                ⬆️ Upload Receipt
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; background: #059669; padding: 0.75rem; font-size: 1.1rem;">
+                                ⬆️ Upload Receipt & Reference Number
                             </button>
                         </form>
                     <?php endif; ?>
