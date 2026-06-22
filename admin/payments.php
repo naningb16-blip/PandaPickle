@@ -18,10 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($payment && in_array($action, ['paid', 'rejected'], true)) {
         if ($action === 'paid') {
-            // Update payment status to paid
+            $referenceNumber = trim($_POST['reference_number'] ?? '');
+            
+            // Update payment status to paid with reference number
             $db->prepare(
-                'UPDATE payments SET payment_status = \'paid\', verified_by = ?, verified_at = NOW() WHERE id = ?'
-            )->execute([$admin['id'], $paymentId]);
+                'UPDATE payments SET payment_status = \'paid\', reference_number = ?, verified_by = ?, verified_at = NOW() WHERE id = ?'
+            )->execute([$referenceNumber, $admin['id'], $paymentId]);
             
             // Auto-approve the reservation or registration
             if ($payment['reservation_id']) {
@@ -95,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $payments = $db->query(
     'SELECT p.*,
         u.fullname, u.email,
-        r.reservation_code,
-        s.title AS session_title
+        r.reservation_code, r.payment_method as res_payment_method,
+        s.title AS session_title, reg.payment_method as reg_payment_method
      FROM payments p
      LEFT JOIN exclusive_reservations r ON r.id = p.reservation_id
      LEFT JOIN open_play_registrations reg ON reg.id = p.registration_id
@@ -113,7 +115,17 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="container">
-    <div class="page-header"><h1>Manage Payments</h1><p>Manual payment verification for reservations and open play.</p></div>
+    <div class="page-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1>Manage Payments</h1>
+                <p>Manual payment verification for reservations and open play.</p>
+            </div>
+            <a href="export-cashless-payments.php" class="btn btn-success" style="white-space: nowrap;">
+                📊 Export Cashless Payments (Excel)
+            </a>
+        </div>
+    </div>
     <div class="admin-layout">
         <?php require __DIR__ . '/includes/sidebar.php'; ?>
         <div class="card">
@@ -122,17 +134,31 @@ require_once __DIR__ . '/../includes/header.php';
                     <thead>
                         <tr>
                             <th>ID</th><th>Customer</th><th>Type</th><th>Reference</th>
-                            <th>Amount</th><th>Proof</th><th>Status</th><th>Verified</th><th>Actions</th>
+                            <th>Amount</th><th>Payment Method</th><th>Transfer Ref#</th><th>Proof</th><th>Status</th><th>Verified</th><th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($payments as $p): ?>
+                        <?php foreach ($payments as $p): 
+                            $paymentMethod = $p['res_payment_method'] ?? $p['reg_payment_method'] ?? 'N/A';
+                        ?>
                         <tr>
                             <td>#<?= (int) $p['id'] ?></td>
                             <td><?= e($p['fullname']) ?><br><small><?= e($p['email']) ?></small></td>
                             <td><?= e(str_replace('_', ' ', $p['payment_type'])) ?></td>
                             <td><?= e($p['reservation_code'] ?? $p['session_title'] ?? '—') ?></td>
                             <td><?= e(formatMoney((float) $p['amount'])) ?></td>
+                            <td>
+                                <span class="badge <?= $paymentMethod === 'cashless' ? 'badge-success' : 'badge-muted' ?>">
+                                    <?= e(ucfirst($paymentMethod)) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if ($p['reference_number']): ?>
+                                    <code style="font-size: 0.85em;"><?= e($p['reference_number']) ?></code>
+                                <?php else: ?>
+                                    <span class="text-muted">—</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php if ($p['proof_image']): ?>
                                     <img src="<?= e($p['proof_image']) ?>" 
@@ -149,6 +175,11 @@ require_once __DIR__ . '/../includes/header.php';
                                 <form method="POST" style="display:inline;">
                                     <?= csrfField() ?>
                                     <input type="hidden" name="payment_id" value="<?= (int) $p['id'] ?>">
+                                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <input type="text" name="reference_number" placeholder="Transfer Ref# (optional)" 
+                                               style="padding: 0.3rem; font-size: 0.85rem; border: 1px solid #d1d5db; border-radius: 4px;"
+                                               title="Enter GCash/Bank Transfer reference number">
+                                    </div>
                                     <button type="submit" name="action" value="paid" class="btn btn-sm btn-primary">Verify Paid</button>
                                     <button type="submit" name="action" value="rejected" class="btn btn-sm btn-danger">Reject</button>
                                 </form>
