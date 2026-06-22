@@ -22,88 +22,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['receipt'])) {
     } else {
         // Validate file upload
         if ($file['error'] === UPLOAD_ERR_OK) {
-        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-        $maxSize = 5 * 1024 * 1024; // 5MB
-        
-        if (!in_array($file['type'], $allowedTypes)) {
-            $uploadError = 'Only JPG, PNG, and GIF images are allowed.';
-        } elseif ($file['size'] > $maxSize) {
-            $uploadError = 'File size must not exceed 5MB.';
-        } else {
-            // Upload to Cloudinary
-            $uploadResult = uploadToCloudinary($file['tmp_name'], 'pandapickle/receipts');
+            $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            $maxSize = 5 * 1024 * 1024; // 5MB
             
-            if ($uploadResult === false) {
-                $uploadError = 'Failed to upload receipt to cloud storage. Please try again.';
+            if (!in_array($file['type'], $allowedTypes)) {
+                $uploadError = 'Only JPG, PNG, and GIF images are allowed.';
+            } elseif ($file['size'] > $maxSize) {
+                $uploadError = 'File size must not exceed 5MB.';
             } else {
-                $cloudinaryUrl = $uploadResult['url'];
-                $cloudinaryPublicId = $uploadResult['public_id'];
+                // Upload to Cloudinary
+                $uploadResult = uploadToCloudinary($file['tmp_name'], 'pandapickle/receipts');
                 
-                // Check if payment record exists
-                $paymentId = null;
-                if ($reservationId) {
-                    $stmt = $db->prepare('SELECT id FROM payments WHERE reservation_id = ?');
-                    $stmt->execute([$reservationId]);
-                    $payment = $stmt->fetch();
-                    $paymentId = $payment['id'] ?? null;
+                if ($uploadResult === false) {
+                    $uploadError = 'Failed to upload receipt to cloud storage. Please try again.';
+                } else {
+                    $cloudinaryUrl = $uploadResult['url'];
+                    $cloudinaryPublicId = $uploadResult['public_id'];
                     
-                    // If no payment record exists, create one
-                    if (!$paymentId) {
-                        $stmt = $db->prepare('SELECT total_amount FROM exclusive_reservations WHERE id = ?');
+                    // Check if payment record exists
+                    $paymentId = null;
+                    if ($reservationId) {
+                        $stmt = $db->prepare('SELECT id FROM payments WHERE reservation_id = ?');
                         $stmt->execute([$reservationId]);
-                        $res = $stmt->fetch();
+                        $payment = $stmt->fetch();
+                        $paymentId = $payment['id'] ?? null;
                         
-                        $stmt = $db->prepare(
-                            'INSERT INTO payments (reservation_id, payment_type, amount, payment_status, proof_image, reference_number) 
-                             VALUES (?, \'reservation\', ?, \'pending_verification\', ?, ?)'
-                        );
-                        $stmt->execute([$reservationId, $res['total_amount'], $cloudinaryUrl, $referenceNumber]);
-                        $paymentId = $db->lastInsertId();
-                    } else {
-                        // Update existing payment record
-                        $stmt = $db->prepare(
-                            'UPDATE payments SET proof_image = ?, reference_number = ?, payment_status = \'pending_verification\' WHERE id = ?'
-                        );
-                        $stmt->execute([$cloudinaryUrl, $referenceNumber, $paymentId]);
-                    }
-                } elseif ($registrationId) {
-                    $stmt = $db->prepare('SELECT id FROM payments WHERE registration_id = ?');
-                    $stmt->execute([$registrationId]);
-                    $payment = $stmt->fetch();
-                    $paymentId = $payment['id'] ?? null;
-                    
-                    // If no payment record exists, create one
-                    if (!$paymentId) {
-                        $stmt = $db->prepare('SELECT total_amount FROM open_play_registrations WHERE id = ?');
+                        // If no payment record exists, create one
+                        if (!$paymentId) {
+                            $stmt = $db->prepare('SELECT total_amount FROM exclusive_reservations WHERE id = ?');
+                            $stmt->execute([$reservationId]);
+                            $res = $stmt->fetch();
+                            
+                            $stmt = $db->prepare(
+                                'INSERT INTO payments (reservation_id, payment_type, amount, payment_status, proof_image, reference_number) 
+                                 VALUES (?, \'reservation\', ?, \'pending_verification\', ?, ?)'
+                            );
+                            $stmt->execute([$reservationId, $res['total_amount'], $cloudinaryUrl, $referenceNumber]);
+                            $paymentId = $db->lastInsertId();
+                        } else {
+                            // Update existing payment record
+                            $stmt = $db->prepare(
+                                'UPDATE payments SET proof_image = ?, reference_number = ?, payment_status = \'pending_verification\' WHERE id = ?'
+                            );
+                            $stmt->execute([$cloudinaryUrl, $referenceNumber, $paymentId]);
+                        }
+                    } elseif ($registrationId) {
+                        $stmt = $db->prepare('SELECT id FROM payments WHERE registration_id = ?');
                         $stmt->execute([$registrationId]);
-                        $reg = $stmt->fetch();
+                        $payment = $stmt->fetch();
+                        $paymentId = $payment['id'] ?? null;
                         
-                        $stmt = $db->prepare(
-                            'INSERT INTO payments (registration_id, payment_type, amount, payment_status, proof_image, reference_number) 
-                             VALUES (?, \'open_play\', ?, \'pending_verification\', ?, ?)'
-                        );
-                        $stmt->execute([$registrationId, $reg['total_amount'], $cloudinaryUrl, $referenceNumber]);
-                        $paymentId = $db->lastInsertId();
-                    } else {
-                        // Update existing payment record
-                        $stmt = $db->prepare(
-                            'UPDATE payments SET proof_image = ?, reference_number = ?, payment_status = \'pending_verification\' WHERE id = ?'
-                        );
-                        $stmt->execute([$cloudinaryUrl, $referenceNumber, $paymentId]);
+                        // If no payment record exists, create one
+                        if (!$paymentId) {
+                            $stmt = $db->prepare('SELECT total_amount FROM open_play_registrations WHERE id = ?');
+                            $stmt->execute([$registrationId]);
+                            $reg = $stmt->fetch();
+                            
+                            $stmt = $db->prepare(
+                                'INSERT INTO payments (registration_id, payment_type, amount, payment_status, proof_image, reference_number) 
+                                 VALUES (?, \'open_play\', ?, \'pending_verification\', ?, ?)'
+                            );
+                            $stmt->execute([$registrationId, $reg['total_amount'], $cloudinaryUrl, $referenceNumber]);
+                            $paymentId = $db->lastInsertId();
+                        } else {
+                            // Update existing payment record
+                            $stmt = $db->prepare(
+                                'UPDATE payments SET proof_image = ?, reference_number = ?, payment_status = \'pending_verification\' WHERE id = ?'
+                            );
+                            $stmt->execute([$cloudinaryUrl, $referenceNumber, $paymentId]);
+                        }
                     }
+                    
+                    flash('success', 'Receipt uploaded successfully! Your booking is pending. Please check your email from time to time for confirmation.');
+                    header('Location: dashboard.php');
+                    exit;
                 }
-                
-                flash('success', 'Receipt uploaded successfully! Your booking is pending. Please check your email from time to time for confirmation.');
-                header('Location: dashboard.php');
-                exit;
             }
+        } else {
+            $uploadError = 'Error uploading file. Please try again.';
         }
-    } else {
-        $uploadError = 'Error uploading file. Please try again.';
-    }
-    
-    if ($uploadError) {
-        flash('error', $uploadError);
+        
+        if ($uploadError) {
+            flash('error', $uploadError);
+        }
     }
 }
 
